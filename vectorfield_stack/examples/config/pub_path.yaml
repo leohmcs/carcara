@@ -1,0 +1,33 @@
+
+#Parameters
+
+# Curve number
+N_curve: 1
+
+# Number of points to be sampled
+N_points: 400
+
+# Stretch factor of the curve in the x direction
+a: 1.5
+# Stretch factor of the curve in the y direction
+b: 1.0
+# Rotation of the curve around the z axis (in dregrees)
+phi: 0.0
+# Displacement in the x direction (meters)
+cx: 0.0
+# Displacement in the y direction (meters)
+cy: 0.0
+
+
+u_i: 0
+u_f: 6.283185307179586
+
+equation: "[2*cos(u), 2.0*sin(u), 0.2*cos(6*u)]"
+
+#Flag to indicate if the path is closed or not
+closed_path_flag: True
+#Number of points to be inserted in between each pais of points of the received path
+insert_n_points: 1
+#Number of points to use in the average filter (it is forced to be an odd number) - if 0 the path is not filtered
+filter_path_n_average: 1
+

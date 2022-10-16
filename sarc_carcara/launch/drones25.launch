@@ -1,0 +1,883 @@
+<?xml version="1.0"?>
+<launch>
+
+
+    <!--Run rviz-->
+    <node pkg = "rviz" name = "rviz" type = "rviz" args="-d $(find robotsim)/rviz/drone25.rviz">
+    </node>
+
+    <!--ROBOT 0-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision0" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="0" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot0" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="0" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator0" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="0" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node0" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="0" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 1-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision1" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="1" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot1" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="1" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator1" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="1" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node1" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="1" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 2-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision2" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="2" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot2" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="2" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator2" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="2" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node2" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="2" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 3-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision3" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="3" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot3" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="3" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator3" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="3" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node3" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="3" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 4-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision4" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="4" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot4" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="4" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator4" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="4" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node4" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="4" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 5-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision5" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="5" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot5" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="5" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator5" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="5" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node5" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="5" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 6-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision6" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="6" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot6" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="6" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator6" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="6" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node6" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="6" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 7-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision7" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="7" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot7" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="7" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator7" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="7" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node7" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="7" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 8-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision8" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="8" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot8" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="8" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator8" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="8" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node8" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="8" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 9-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision9" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="9" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot9" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="9" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator9" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="9" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node9" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="9" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 10-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision10" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="10" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot10" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="10" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator10" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="10" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node10" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="10" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 11-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision11" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="11" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot11" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="11" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator11" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="11" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node11" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="11" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 12-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision12" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="12" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot12" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="12" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator12" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="12" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node12" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="12" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 13-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision13" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="13" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot13" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="13" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator13" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="13" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node13" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="13" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 14-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision14" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="14" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot14" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="14" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator14" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="14" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node14" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="14" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 15-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision15" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="15" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot15" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="15" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator15" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="15" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node15" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="15" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 16-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision16" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="16" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot16" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="16" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator16" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="16" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node16" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="16" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 17-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision17" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="17" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot17" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="17" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator17" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="17" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node17" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="17" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 18-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision18" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="18" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot18" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="18" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator18" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="18" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node18" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="18" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 19-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision19" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="19" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot19" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="19" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator19" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="19" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node19" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="19" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 20-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision20" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="20" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot20" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="20" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator20" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="20" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node20" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="20" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 21-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision21" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="21" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot21" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="21" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator21" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="21" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node21" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="21" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 22-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision22" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="22" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot22" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="22" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator22" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="22" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node22" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="22" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 23-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision23" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="23" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot23" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="23" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator23" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="23" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node23" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="23" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+
+
+
+    <!--ROBOT 24-->
+
+    <!--Run simulated vision-->
+    <node pkg = "robotsim" name = "vision24" type = "vision.py" output="screen">
+        <param name="Robot_number" type="int" value="24" />
+        <param name="Number_of_robots" type="int" value="25" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "robotsim" name = "robot24" type = "drone_sim.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="24" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
+    </node>
+
+
+    <!--Run the node that will generate an example path-->
+    <node pkg = "examples" name = "path_generator24" type = "example_path.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="24" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />
+    </node>
+
+
+    <!-- Run the node that controls the robot with vector fields -->
+    <node pkg="quad_robot" name="quad_node24" type="quad_node.py" args="" output="screen">
+        <param name="Robot_number" type="int" value="24" />
+        <param name="Number_of_robots" type="int" value="25" />
+        <rosparam command="load" file="$(find quad_robot)/config/quad_params.yaml" />
+    </node>
+
+</launch>
+
+

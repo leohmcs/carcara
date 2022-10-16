@@ -559,8 +559,8 @@ class distancefield_class():
         # Stop the robot if the it reached the end of a open path
         if not self.closed_path_flag:
             if k_min == size_path - 1:
-                rospy.logwarn("CHECK THIS: k_min:%s size_path-1:%s self.pos:%s local_path[k_min]:%s", 
-                    k_min, size_path - 1, self.pos, local_path[k_min])
+                # rospy.logwarn("CHECK THIS: k_min:%s size_path-1:%s self.pos:%s local_path[k_min]:%s", 
+                    # k_min, size_path - 1, self.pos, local_path[k_min])
 
                 Vx = 0
                 Vy = 0

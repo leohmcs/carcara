@@ -9,7 +9,7 @@ from time import sleep
 from visualization_msgs.msg import Marker, MarkerArray
 import tf
 from tf2_msgs.msg import TFMessage
-from std_msgs.msg import Float32, Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray, Bool
 from sarc_carcara.msg import FireDetectionResult
 
 import numpy as np
@@ -61,9 +61,9 @@ class Paths:
         self.saw_it = 0
         self.got_there = 0
         self.got_there2 = 0
-        self.predefined = [-125,-113,0]
-        self.range_vision = 15
         self.height = 20
+        self.predefined = [-20, -20, self.height]
+        self.range_vision = 15
         self.area = Point()
         self.area.x = 100
         self.area.y = 100
@@ -77,6 +77,7 @@ class Paths:
         self.pub_path_equation = rospy.Publisher("example_path_equation", PathEq, queue_size=10)
         self.pub_rviz_curve = rospy.Publisher("visualization_path", MarkerArray, queue_size=1)
         self.pub_state = rospy.Publisher("trajectory_state", Float32, queue_size=1)
+        self.pub_disarm = rospy.Publisher("disarm", Bool, queue_size=10)
 
         # Subscribers
         if self.number_of_robots > 0:
@@ -84,7 +85,7 @@ class Paths:
                 self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/ground_truth",  Odometry, self.odometry_cb, (i))
                 self.vis_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/fire_detection_result",  FireDetectionResult, self.vision_cb, (i))
 
-
+        self.last_log_msg = ""
 
         self.rate.sleep()
 
@@ -233,7 +234,7 @@ class Paths:
 
 
                     else:
-                        print("Something wrong with generating path of search")
+                        print("Something wrong while generating path of search")
         else:
             while self.comparison(p_now.y, p_final_y, above_area):
                 
@@ -300,10 +301,7 @@ class Paths:
 
 
                 else:
-                    print("Something wrong with genereting path of search")
-
-            for i in range(len(path[0])):
-                print(path[0][i],path[1][i],path[2][i])
+                    print("Something wrong while genereting path of search")
 
         return (path)
 
@@ -419,14 +417,14 @@ class Paths:
         return self.path_msg
     # ----------  ----------  ----------  ----------  ----------
 
-
-
-
-
     # Function to send a array of markers, representing the curve, to rviz
     def arrange_cells(self,p0,h):
         if self.number_of_robots == 1:
-            return self.area.x/2,-self.area.y/2,self.area.x,self.area.y
+            del_x = self.area.x/2
+            del_y = -self.area.y/2
+            del_w = self.area.x
+            del_h = self.area.y
+
         elif self.number_of_robots == 3:
             if self.robot_number == 0 or self.robot_number == 1:
                 del_w = 2*self.area.x/3
@@ -497,7 +495,7 @@ class Paths:
         p_now.x = p_now_x
         p_now.y = p_now_y
 
-        return del_x,del_y,del_w,del_h,[p_now_x,p_now_y,self.height]
+        return del_x, del_y, del_w, del_h, [p_now_x, p_now_y, self.height]
         
 
 
@@ -647,14 +645,12 @@ class Paths:
 
 
     def path(self):
-
-
         self.rate.sleep()
 
         self.arrange()
         p0 = self.pos[self.robot_number]
         # Generate one of the curve types
-        del_x,del_y,del_w,del_h,self.pos_search_site = self.arrange_cells(p0,self.range_vision)
+        del_x, del_y, del_w, del_h, self.pos_search_site = self.arrange_cells(p0, self.range_vision)
         # print(self.pos_search_site)
 
         path = self.refference_path_1(self.range_vision,p0,del_x,del_y,del_w,del_h)
@@ -694,12 +690,12 @@ class Paths:
                     whosawit = i
 
             # States Machine
-
+            # print(self.etapa, self.got_there, self.reunited)
             # Wait 5 seconds Stage
             if (self.etapa == 0):
                 rospy.sleep(5)
                 self.etapa += 1
-                print(f"a{self.robot_number}")
+                # print(f"a{self.robot_number}")
                 poki = self.pos[self.robot_number]
 
             # Go to Search Site
@@ -721,14 +717,12 @@ class Paths:
                 if (x <= 1.0):
                     self.search_site = 1
                 
-
             # Search Fire Stage
             elif (self.search_site and not self.saw_it and self.etapa == 1):
                 self.pub_state.publish(self.etapa)
                 self.send_curve_to_rviz(path, self.pub_rviz_curve)
                 self.pub_path.publish(path_msg)
-                print(f"b{self.robot_number}")
-
+                self.log("Searching fire", rospy.loginfo)
 
             # Centralize Above Fire Stage
             elif (self.saw_it and self.etapa == 1):
@@ -739,24 +733,21 @@ class Paths:
                     self.pos_des_now[i][0] += self.first_x[i]
                     self.pos_des_now[i][1] += self.first_y[i]
 
-                self.path2 = self.refference_path_2(self.number_of_samples,self.pos[self.robot_number],self.pos_des_now[self.robot_number])
+                self.path2 = self.refference_path_2(self.number_of_samples,self.pos[self.robot_number], self.pos_des_now[self.robot_number])
                 self.path_msg2 = self.create_path_msg(self.path2,False)
-                print("c\n")
+                self.log("Going to fire location around {}".format(self.pos_des_now[self.robot_number]), rospy.loginfo)
 
 
             elif (self.saw_it and self.etapa == 2 and not self.got_there):
-
                 x = np.linalg.norm(np.array(self.pos[self.robot_number]) - np.array(self.pos_des_now[self.robot_number]))
 
-                if (x <= 3.0):
+                if (x <= 2.0):
                     self.got_there = 1
                     self.etapa += 1
 
                 self.pub_state.publish(self.etapa)
                 self.pub_path.publish(self.path_msg2)
                 self.send_curve_to_rviz(self.path2, self.pub_rviz_curve)
-                print("d")
-
 
             # Wait for reunion
             elif (self.etapa == 3 and self.got_there and not self.reunited):
@@ -771,13 +762,10 @@ class Paths:
                 #        self.reunited = 0
                 #        break    
 
-                print("e")
-
             # Wait 5 seconds Stage
             elif (self.etapa == 3 and self.got_there and self.reunited):
-
-                print("f")
-                #rospy.sleep(5)
+                self.log("Holding position", rospy.loginfo)
+                rospy.sleep(5)
                 self.etapa += 1
             
             # Extinguish Fire Stage
@@ -795,23 +783,24 @@ class Paths:
                 self.pub_state.publish(self.etapa)
                 #self.pos2 = [self.pos[self.robot_number][0] - self.first_x[self.robot_number], self.pos[self.robot_number][1] - self.first_y[self.robot_number]]
                 self.pos2 = [self.pos[self.robot_number][0], self.pos[self.robot_number][1]]
-                self.path3 = self.refference_path_3(self.number_of_samples,self.pos2)
-                self.path_msg3 = self.create_path_msg(self.path3,True)
-                print("g")
+                self.path3 = self.refference_path_3(self.number_of_samples, self.pos2)
+                self.path_msg3 = self.create_path_msg(self.path3, True)
+                # print("g")
 
             elif (self.etapa == 5 and not self.fire_extinguished[self.robot_number]):
 
                 self.pub_state.publish(self.etapa)
                 
-                rospy.sleep(30)
+                self.log("Extinguishing fire", rospy.loginfo)
+
                 for i in range(len(self.fire_extinguished)):
-                    self.fireextinguished = True
-                #self.pub_path.publish(self.path_msg3)
-                #self.send_curve_to_rviz(self.path3, self.pub_rviz_curve)
-                print("h")
+                    self.fire_extinguished[i] = True
+                self.pub_path.publish(self.path_msg3)
+                self.send_curve_to_rviz(self.path3, self.pub_rviz_curve)
 
             # Retreat to Pre-defined Location
             elif (self.etapa == 5 and self.fire_extinguished[self.robot_number]):
+                rospy.sleep(30)
                 self.etapa += 1
 
                 self.predefined[0] += self.first_x[self.robot_number]
@@ -820,23 +809,23 @@ class Paths:
                 self.pos3 = self.pos[self.robot_number]
                 self.path2 = self.refference_path_2(self.number_of_samples,self.pos3,self.predefined)
                 self.path_msg2 = self.create_path_msg(self.path2,False)
-                print("i")
 
             elif (self.etapa == 6 and not self.got_there2):
                 self.got_there2 = 0
                 x = np.linalg.norm(np.array(self.pos[self.robot_number]) - np.array(self.predefined))
-                if (x <= 0.2):
+                if (x <= 1.0):
                     self.got_there2 = 1
                     self.etapa += 1
                 self.pub_state.publish(self.etapa)
                 self.pub_path.publish(self.path_msg2)
                 self.send_curve_to_rviz(self.path2, self.pub_rviz_curve)
-                print("j")
+
+                self.log("Going to retreat location {}".format(self.predefined[:2]), rospy.loginfo)
 
             elif (self.etapa == 7):
-                print("Simulation Finished")
+                self.log("Proceeding to land and disarm pipeline.", rospy.loginfo)
+                self.pub_disarm(Bool(data=True))
                 rospy.sleep(5)
-                pass
             else:
                 print("Something Went Wrong in path generator node")
             self.rate.sleep()
@@ -845,18 +834,17 @@ class Paths:
     # ---------- !! ---------- !! ---------- !! ---------- !! ----------
 
 
-
     def read_params(self):
         # Obtain the parameters
         # try:
-        self.robot_number = int(rospy.get_param("~robot_number"));
-        self.number_of_robots = int(rospy.get_param("~number_of_robots"));
-        self.number_of_samples = int(rospy.get_param("~N_points"));
-        self.a = float(rospy.get_param("~a"));
-        self.b = float(rospy.get_param("~b"));
-        self.phi = float(rospy.get_param("~phi"))*(3.1415926535/180.0);
-        self.cx = float(rospy.get_param("~cx"));
-        self.cy = float(rospy.get_param("~cy"));
+        self.robot_number = int(rospy.get_param("~robot_number"))
+        self.number_of_robots = int(rospy.get_param("~number_of_robots"))
+        self.number_of_samples = int(rospy.get_param("~N_points"))
+        self.a = float(rospy.get_param("~a"))
+        self.b = float(rospy.get_param("~b"))
+        self.phi = float(rospy.get_param("~phi"))*(3.1415926535/180.0)
+        self.cx = float(rospy.get_param("~cx"))
+        self.cy = float(rospy.get_param("~cy"))
         self.closed_path_flag = bool(rospy.get_param("~closed_path_flag"))
         self.insert_n_points = int(rospy.get_param("~insert_n_points"))
         self.filter_path_n_average = int(rospy.get_param("~filter_path_n_average"))
@@ -882,8 +870,12 @@ class Paths:
         print("\33[94mfilter_path_n_average: " +  str(self.filter_path_n_average) +"\33[0m")
 
 
-
-
+    def log(self, message, f):
+        if message == self.last_log_msg:
+            return
+        self.last_log_msg = message
+        message = "[{}] ".format(rospy.get_namespace().replace("/", "")) + message
+        f(message)
 
 
 

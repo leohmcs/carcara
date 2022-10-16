@@ -34,7 +34,7 @@
     <node pkg="sarc_carcara" name="fire_detector_node" type="fire_detector_node.py" output="screen" respawn="true" />
 
     <!-- Run the interface between our controller and the MRS system -->
-    <node pkg="sarc_carcara" name="mrs_interface_node" type="mrs_interface_node.py" output="screen" />
+    <node pkg="sarc_carcara" name="mrs_interface_node" type="mrs_interface_node.py" output="screen" respawn="true" />
 
 </launch>
 

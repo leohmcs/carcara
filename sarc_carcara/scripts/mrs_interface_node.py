@@ -3,6 +3,9 @@
 import rospy
 from mrs_msgs.msg import SpeedTrackerCommand, Float64Stamped
 from geometry_msgs.msg import Twist, Accel
+from std_msgs.msg import Bool
+
+from std_srvs.srv import Trigger, SetBool
 from mrs_msgs.srv import String
 
 import numpy as np
@@ -21,10 +24,13 @@ class MrsInterfaceNode:
         vel_sub = rospy.Subscriber("cmd_vel", Twist, callback=self.vel_cb)
         accel_sub = rospy.Subscriber("cmd_accel", Accel, callback=self.accel_cb)
         heading_sub = rospy.Subscriber("control_manager/heading", Float64Stamped, self.heading_cb)
+        self.disarm_sub = rospy.Subscriber("disarm", Bool, self.disarm_cb)
 
         self.command_pub = rospy.Publisher("control_manager/speed_tracker/command", SpeedTrackerCommand, queue_size=10)
         rospy.wait_for_service("control_manager/switch_tracker", timeout=None)
         self.switch_tracker_srv = rospy.ServiceProxy("control_manager/switch_tracker", String)
+        self.land_srv = rospy.ServiceProxy("uav_manager/land", Trigger)
+        self.arm_srv = rospy.ServiceProxy("control_manager/arm", SetBool)
 
     def heading_cb(self, msg: Float64Stamped):
         self.heading = msg.value
@@ -54,6 +60,12 @@ class MrsInterfaceNode:
         self.command_pub.publish(command_msg)
         self.command_published = True
 
+    def disarm_cb(self, msg: Bool):
+        if msg.data:
+            self.land_srv()
+            rospy.sleep(2)
+            self.arm_srv(0)
+
 
 rospy.init_node("mrs_interface_node")
 node = MrsInterfaceNode()
@@ -65,7 +77,7 @@ while not rospy.is_shutdown():
         try:
             resp = node.switch_tracker_srv("SpeedTracker")
             if resp.success:
-                rospy.loginfo("Successfully switched to SpeedTracker")
+                rospy.loginfo("[{}] Successfully switched to SpeedTracker".format(node.ns))
                 node.switched_tracker = True
             else:
                 rospy.logwarn(resp.message)

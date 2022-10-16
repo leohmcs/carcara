@@ -49,7 +49,7 @@ class FireDetectorNode:
                 rect = self.camera_model.rectifyPoint(fire_center)
                 p_c = self.camera_model.projectPixelTo3dRay(rect) # point for z = 1 in the camera frame
                 fire_pos_world = self.point_in_world(p_c)
-                rospy.loginfo("Fire detected at position ({}, {}, {})!".format(fire_pos_world[0], fire_pos_world[1], fire_pos_world[2]))
+                # rospy.loginfo("Fire detected at position ({}, {}, {})!".format(fire_pos_world[0], fire_pos_world[1], fire_pos_world[2]))
                 result_msg.fire_detected = True
                 result_msg.position = self.point_msg(fire_pos_world)
             

@@ -1,14 +1,15 @@
 # Carcará
 Team: Sofia Paiva, Artur Costa, João Baião, Leonardo Santos.
+
 Institution: Universidade Federal de Minas Gerais (UFMG)
 
 This repository contains:
 
 * `sarc_carcara`: package containing our proposed solution;
 
-* `vectorfield_stack`: a modified version of the original repository found at this [link](https://github.com/adrianomcr/vectorfield_stack).
+* `vectorfield_stack`: a modified version of the original repository found at this [link](https://github.com/adrianomcr/vectorfield_stack);
 
-* `sarc_environment`: package containing the simulation environment. You can check the original repository at this [link](https://github.com/2nd-sarc-barinet-aerospace-competition/sarc_environment) ;
+* `sarc_environment`: package containing the simulation environment. You can check the original repository at this [link](https://github.com/2nd-sarc-barinet-aerospace-competition/sarc_environment).
 
 
 ## How to run

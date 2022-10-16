@@ -3,20 +3,14 @@
     <arg name="robot_number" />
     <arg name="number_of_robots" />
 
-    <!--Run simulated vision-->
-    <!-- <node pkg="robotsim" name="vision" type="vision.py" >
-        <param name="robot_number" type="int" value="$(arg robot_number)" />
-        <param name="number_of_robots" type="int" value="$(arg number_of_robots)" />
-    </node> -->
-
-    <!--Run the node that will generate an example path-->
+    <!-- Run the node that will simulate the system in RViz -->
     <node pkg="robotsim" name="robot" type="drone_sim.py">
         <param name="robot_number" type="int" value="$(arg robot_number)" />
         <param name="number_of_robots" type="int" value="$(arg number_of_robots)" />
         <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />
     </node>
 
-    <!--Run the node that will generate the path-->
+    <!--Run the node that will generate the paths -->
     <node pkg="examples" name="path_generator" type="example_path.py" output="screen"> 
         <param name="robot_number" type="int" value="$(arg robot_number)" />
         <param name="number_of_robots" type="int" value="$(arg number_of_robots)" />

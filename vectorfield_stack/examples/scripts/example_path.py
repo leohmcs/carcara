@@ -17,6 +17,7 @@ import sys
 from distancefield.msg import Path, PathEq
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 
+from copy import deepcopy
 
 """
 Universidade Federal de Minas Gerais (UFMG) - 2019
@@ -729,7 +730,7 @@ class Paths:
                 self.etapa += 1
 
                 for i in range(self.number_of_robots):
-                    self.pos_des_now[i] = self.pos_des[whosawit]
+                    self.pos_des_now[i] = deepcopy(self.pos_des[whosawit])
                     self.pos_des_now[i][0] += self.first_x[i]
                     self.pos_des_now[i][1] += self.first_y[i]
 
@@ -737,11 +738,10 @@ class Paths:
                 self.path_msg2 = self.create_path_msg(self.path2,False)
                 self.log("Going to fire location around {}".format(self.pos_des_now[self.robot_number]), rospy.loginfo)
 
-
             elif (self.saw_it and self.etapa == 2 and not self.got_there):
                 x = np.linalg.norm(np.array(self.pos[self.robot_number]) - np.array(self.pos_des_now[self.robot_number]))
 
-                if (x <= 2.0):
+                if (x <= 1.0):
                     self.got_there = 1
                     self.etapa += 1
 
@@ -751,16 +751,12 @@ class Paths:
 
             # Wait for reunion
             elif (self.etapa == 3 and self.got_there and not self.reunited):
-                x = []
                 for i in range(self.number_of_robots):
-                    x.append(np.linalg.norm(np.array(self.pos[i]) - np.array(self.pos_des_now[i])))
-
-                self.reunited = 1
-
-                #for i in x:
-                #    if (i > 3.0):
-                #        self.reunited = 0
-                #        break    
+                    if np.linalg.norm(np.array(self.pos[i]) - np.array(self.pos_des_now[i])) > 2.0:
+                        self.reunited = 0
+                        break
+                    else:
+                        self.reunited = 1  
 
             # Wait 5 seconds Stage
             elif (self.etapa == 3 and self.got_there and self.reunited):
@@ -782,7 +778,7 @@ class Paths:
 
                 self.pub_state.publish(self.etapa)
                 #self.pos2 = [self.pos[self.robot_number][0] - self.first_x[self.robot_number], self.pos[self.robot_number][1] - self.first_y[self.robot_number]]
-                self.pos2 = [self.pos[self.robot_number][0], self.pos[self.robot_number][1]]
+                self.pos2 = self.pos[0][:2] #[self.pos[self.robot_number][0], self.pos[self.robot_number][1]]
                 self.path3 = self.refference_path_3(self.number_of_samples, self.pos2)
                 self.path_msg3 = self.create_path_msg(self.path3, True)
                 # print("g")
@@ -820,12 +816,12 @@ class Paths:
                 self.pub_path.publish(self.path_msg2)
                 self.send_curve_to_rviz(self.path2, self.pub_rviz_curve)
 
-                self.log("Going to retreat location {}".format(self.predefined[:2]), rospy.loginfo)
+                self.log("Going to retreat location: {}".format(self.predefined[:2]), rospy.loginfo)
 
             elif (self.etapa == 7):
                 self.log("Proceeding to land and disarm pipeline.", rospy.loginfo)
-                self.pub_disarm(Bool(data=True))
-                rospy.sleep(5)
+                self.pub_disarm.publish(Bool(data=True))
+                # rospy.sleep(5)
             else:
                 print("Something Went Wrong in path generator node")
             self.rate.sleep()

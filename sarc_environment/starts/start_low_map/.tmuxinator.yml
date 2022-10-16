@@ -12,7 +12,7 @@ windows:
       panes:
         - waitForRos; roslaunch sarc_environment sarc.launch
         - waitForRos; roslaunch sarc_environment sarc_low_map.launch
-        - waitForOdometry; gz camera -c gzclient_camera -f ${UAV_NAME}; history -s gz camera -c gzclient_camera -f ${UAV_NAME}
+        # - waitForOdometry; gz camera -c gzclient_camera -f ${UAV_NAME}; history -s gz camera -c gzclient_camera -f ${UAV_NAME}
   - status:
       layout: tiled
       panes:
@@ -21,13 +21,13 @@ windows:
       layout: tiled
       panes:
         # uav 1
-        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos1.yaml"
+        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos1.yaml"
         # uav 2
-        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "2 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos2.yaml"
+        # - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "2 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos2.yaml"
         # uav 3
-        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "3 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos3.yaml"
+        # - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "3 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos3.yaml"
         # uav 4
-        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "4 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos4.yaml"
+        # - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "4 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/pos/pos4.yaml"
 
   - control:
       layout: tiled
@@ -39,8 +39,14 @@ windows:
         # uav 1
         - waitForRos; rosrun sarc_environment fall.py 1
         # uav 2
-        - waitForRos; rosrun sarc_environment fall.py 2
+        # - waitForRos; rosrun sarc_environment fall.py 2
         # uav 3
-        - waitForRos; rosrun sarc_environment fall.py 3
+        # - waitForRos; rosrun sarc_environment fall.py 3
         # uav 4
-        - waitForRos; rosrun sarc_environment fall.py 4
+        # - waitForRos; rosrun sarc_environment fall.py 4
+  - solution:
+      layout: tiled
+      panes:
+        - waitForOdometry; sleep 15; roslaunch sarc_carcara drones01.launch
+  - user:
+      layout: tiled

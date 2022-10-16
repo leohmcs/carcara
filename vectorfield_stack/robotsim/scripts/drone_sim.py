@@ -2,19 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import rospy
-from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import Twist, Pose, Point, Quaternion, Accel
 from nav_msgs.msg import Odometry
-from tf.transformations import euler_from_quaternion
-from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Float32
-from std_msgs.msg import Float64MultiArray
 from visualization_msgs.msg import Marker, MarkerArray
-from math import cos, sin, sqrt, pi
+
 import numpy as np
 
 
-class drone_node(object):
+class DroneSimNode(object):
     """
     Navigation control using Action Server
     """
@@ -80,21 +76,21 @@ class drone_node(object):
         theta = rpy[1]
         psi = rpy[2]
         # Get rotation matrix
-        Rot << [[(cos(theta)*cos(psi)), (sin(phi)*sin(theta)*cos(psi)-cos(phi)*sin(psi)), (cos(phi)*sin(theta)*cos(psi)+sin(phi)*sin(psi))],
-                [(cos(theta)*sin(psi)), (sin(phi)*sin(theta)*sin(psi)+cos(phi)*cos(psi)), (cos(phi)*sin(theta)*sin(psi)-sin(phi)*cos(psi))],
-                [(-sin(theta)), (sin(phi)*cos(theta)), (cos(phi)*cos(theta))]]
+        Rot << [[(np.cos(theta)*np.cos(psi)), (np.sin(phi)*np.sin(theta)*np.cos(psi)-np.cos(phi)*np.sin(psi)), (np.cos(phi)*np.sin(theta)*np.cos(psi)+np.sin(phi)*np.sin(psi))],
+                [(np.cos(theta)*np.sin(psi)), (np.sin(phi)*np.sin(theta)*np.sin(psi)+np.cos(phi)*np.cos(psi)), (np.cos(phi)*np.sin(theta)*np.sin(psi)-np.sin(phi)*np.cos(psi))],
+                [(-np.sin(theta)), (np.sin(phi)*np.cos(theta)), (np.cos(phi)*np.cos(theta))]]
 
         return Rot
 
     #Function to convert euler angles to a quaternion
     def eul2quat(self, ang_in):
 
-        cy = cos(ang_in[2] * 0.5); #yaw
-        sy = sin(ang_in[2] * 0.5); #yaw
-        cp = cos(ang_in[1] * 0.5); #pitch
-        sp = sin(ang_in[1] * 0.5); #pitch
-        cr = cos(ang_in[0] * 0.5); #roll
-        sr = sin(ang_in[0] * 0.5); #roll
+        cy = np.cos(ang_in[2] * 0.5); #yaw
+        sy = np.sin(ang_in[2] * 0.5); #yaw
+        cp = np.cos(ang_in[1] * 0.5); #pitch
+        sp = np.sin(ang_in[1] * 0.5); #pitch
+        cr = np.cos(ang_in[0] * 0.5); #roll
+        sr = np.sin(ang_in[0] * 0.5); #roll
 
         q_out = [1,0,0,0]
         q_out[0] = cy * cp * cr + sy * sp * sr
@@ -110,25 +106,25 @@ class drone_node(object):
         tr = R[0][0]+R[1][1]+R[2][2]
 
         if (tr > 0):
-            S = sqrt(tr+1.0) * 2; # S=4*qw 
+            S = np.sqrt(tr+1.0) * 2; # S=4*qw 
             qw = 0.25 * S
             qx = (R[2][1] - R[1][2]) / S
             qy = (R[0][2] - R[2][0]) / S
             qz = (R[1][0] - R[0][1]) / S
         elif ((R[0][0] > R[1][1]) and (R[0][0] > R[2][2])):
-            S = sqrt(1.0 + R[0][0] - R[1][1] - R[2][2]) * 2; # S=4*qx 
+            S = np.sqrt(1.0 + R[0][0] - R[1][1] - R[2][2]) * 2; # S=4*qx 
             qw = (R[2][1] - R[1][2]) / S
             qx = 0.25 * S
             qy = (R[0][1] + R[1][0]) / S
             qz = (R[0][2] + R[2][0]) / S
         elif (R[1][1] > R[2][2]):
-            S = sqrt(1.0 + R[1][1] - R[0][0] - R[2][2]) * 2; # S=4*qy
+            S = np.sqrt(1.0 + R[1][1] - R[0][0] - R[2][2]) * 2; # S=4*qy
             qw = (R[0][2] - R[2][0]) / S
             qx = (R[0][1] + R[1][0]) / S
             qy = 0.25 * S
             qz = (R[1][2] + R[2][1]) / S
         else:
-            S = sqrt(1.0 + R[2][2] - R[0][0] - R[1][1]) * 2; # S=4*qz
+            S = np.sqrt(1.0 + R[2][2] - R[0][0] - R[1][1]) * 2; # S=4*qz
             qw = (R[1][0] - R[0][1]) / S
             qx = (R[0][2] + R[2][0]) / S
             qy = (R[1][2] + R[2][1]) / S
@@ -182,7 +178,7 @@ class drone_node(object):
         n = 0
         for k in range(len(u)):
             n = n + u[k]**2
-        n = sqrt(n)
+        n = np.sqrt(n)
 
         v = []
         for k in range(len(u)):
@@ -356,14 +352,14 @@ class drone_node(object):
                 o_close = 0
                 for o in range(n_obst):
                     Dvec = [self.state[0]-self.obtscles_pos[o][0], self.state[1]-self.obtscles_pos[o][1], self.state[2]-self.obtscles_pos[o][2]]
-                    D = sqrt(Dvec[0]**2 + Dvec[1]**2 + Dvec[2]**2) - self.obtscles_r[o]
-                    if (D<D_close):
+                    D = np.sqrt(Dvec[0]**2 + Dvec[1]**2 + Dvec[2]**2) - self.obtscles_r[o]
+                    if (D < D_close):
                         o_close = o
                         D_close = D
 
                 # Publish vector
                 D_vec_close = [self.obtscles_pos[o_close][0]-self.state[0], self.obtscles_pos[o_close][1]-self.state[1], self.obtscles_pos[o_close][2]-self.state[2]]
-                D = sqrt(D_vec_close[0]**2 + D_vec_close[1]**2 + D_vec_close[2]**2)
+                D = np.sqrt(D_vec_close[0]**2 + D_vec_close[1]**2 + D_vec_close[2]**2)
                 D_hat = [D_vec_close[0]/(D+1e-8), D_vec_close[1]/(D+1e-8), D_vec_close[2]/(D+1e-8)]
                 D = D - self.obtscles_r[o_close]
                 # D_vec_close = [D_hat[0]*D, D_hat[1]*D, D_hat[2]*D]
@@ -436,7 +432,7 @@ class drone_node(object):
                 # Append marker to array
                 robot_marker_array.markers.append(marker_robot)
 
-                R0 = [[cos(pi/4),-sin(pi/4),0],[sin(pi/4),cos(pi/4),0],[0, 0, 1]]
+                R0 = [[np.cos(np.pi/4),-np.sin(np.pi/4),0],[np.sin(np.pi/4),np.cos(np.pi/4),0],[0, 0, 1]]
                 Rarm1 = (np.matrix(R_bw)*np.matrix(R0)).tolist()
                 qarm1 = self.rotm2quat(Rarm1)
                 #Publish robot marker to rviz
@@ -472,7 +468,7 @@ class drone_node(object):
                 # Append marker to array
                 robot_marker_array.markers.append(marker_arm1)
 
-                R0 = [[cos(pi/4),-sin(pi/4),0],[sin(pi/4),cos(pi/4),0],[0, 0, 1]]
+                R0 = [[np.cos(np.pi/4),-np.sin(np.pi/4),0],[np.sin(np.pi/4),np.cos(np.pi/4),0],[0, 0, 1]]
                 # R0 = [[1,0,0],[0,1,0],[0, 0, 1]]
                 Rarm2 = (np.matrix(R_bw)*np.matrix(R0)).tolist()
                 qarm2 = self.rotm2quat(Rarm2)
@@ -701,7 +697,7 @@ class drone_node(object):
                 #Publish robots history to rviz
                 delta = 0.05
                 approx_len = 5.0
-                if(sqrt((self.state[0]-self.history[-1][0])**2+(self.state[1]-self.history[-1][1])**2+(self.state[2]-self.history[-1][2])**2) > delta):
+                if(np.sqrt((self.state[0]-self.history[-1][0])**2+(self.state[1]-self.history[-1][1])**2+(self.state[2]-self.history[-1][2])**2) > delta):
                     self.history.append([self.state[0],self.state[1],self.state[2]])
                     # print(len(self.history))
                     # print("meleca")
@@ -742,7 +738,7 @@ class drone_node(object):
                 # Publish marker array
                 self.pub_rviz_hist.publish(points_marker)
 
-            #end count2
+            # end count2
 
             #Publish obstacles markers to rviz
             count1 = count1 + 1
@@ -779,9 +775,6 @@ class drone_node(object):
 
                     # Append marker to array
                     points_marker.markers.append(marker)
-
-                # Publish marker array
-                #self.pub_rviz_obst.publish(points_marker)
 
             rate.sleep()
 
@@ -894,11 +887,6 @@ class drone_node(object):
 
         self.arrange()
 
-        # self.state[0] += self.first_x
-        # self.state[1] += self.first_y
-
-        # rospy.sleep(10)
-
         initial_odom = rospy.wait_for_message("ground_truth", Odometry)
         self.state[0] = initial_odom.pose.pose.position.x
         self.state[1] = initial_odom.pose.pose.position.y
@@ -928,8 +916,6 @@ class drone_node(object):
         self.pub_rviz_hist = rospy.Publisher("history", MarkerArray, queue_size=1)
         self.pub_vel = rospy.Publisher("cmd_vel",  Twist, queue_size=10)
         self.pub_accel = rospy.Publisher("cmd_accel", Accel, queue_size=10)
-
-        # self.pub_rviz_robot_w1 = rospy.Publisher("/drone/robot_w1", Marker, queue_size=1)
 
         # subscribers
         rospy.Subscriber("odometry/odom_gps", Odometry, self.odometry_callback)
@@ -989,16 +975,10 @@ class drone_node(object):
 
         vx = 0.5*(vr+vl)
         wz = (self.robot_b/(2*(self.robot_a**2+self.robot_b**2)))*(vr-vl)
-        # wz = 0
 
         vel = [vx, wz]
-        # print ("\33[96m[vx, wz] = [%f, %f]\33[0m" % (vx, wz))
-
-
         self.vel = vel
 
-
-
 if __name__ == '__main__':
-    node = drone_node()
+    node = DroneSimNode()
     node.run()

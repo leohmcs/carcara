@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from mrs_msgs.msg import SpeedTrackerCommand, Float64Stamped
+from mrs_msgs.msg import SpeedTrackerCommand, Float64Stamped, UavStatus
 from geometry_msgs.msg import Twist, Accel
 from std_msgs.msg import Bool
 
@@ -24,7 +24,8 @@ class MrsInterfaceNode:
         vel_sub = rospy.Subscriber("cmd_vel", Twist, callback=self.vel_cb)
         accel_sub = rospy.Subscriber("cmd_accel", Accel, callback=self.accel_cb)
         heading_sub = rospy.Subscriber("control_manager/heading", Float64Stamped, self.heading_cb)
-        self.disarm_sub = rospy.Subscriber("disarm", Bool, self.disarm_cb)
+        disarm_sub = rospy.Subscriber("disarm", Bool, self.disarm_cb)
+        status_sub = rospy.Subscriber("mrs_uav_status/uav_status", UavStatus, self.status_cb)
 
         self.command_pub = rospy.Publisher("control_manager/speed_tracker/command", SpeedTrackerCommand, queue_size=10)
         rospy.wait_for_service("control_manager/switch_tracker", timeout=None)
@@ -62,9 +63,11 @@ class MrsInterfaceNode:
 
     def disarm_cb(self, msg: Bool):
         if msg.data:
-            self.land_srv()
-            rospy.sleep(2)
-            self.arm_srv(0)
+            resp = self.land_srv()
+
+    def status_cb(self, msg: UavStatus):
+        if msg.null_tracker:
+            self.arm_srv(0)     # disarm drone when null tracker is active
 
 
 rospy.init_node("mrs_interface_node")

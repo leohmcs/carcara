@@ -1,17 +1,20 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="num_of_robots" value="3" />
+    <arg name="num_of_robots" value="4" />
 
     <!--Run rviz-->
-    <node pkg = "rviz" name = "rviz" type = "rviz" args="-d $(find robotsim)/rviz/drone3.rviz" />
+    <node pkg = "rviz" name = "rviz" type = "rviz" args="-d $(find robotsim)/rviz/drone5.rviz" />
 
+    <!-- Robot 1 -->
     <group ns="uav1" >
         <include file="$(find sarc_carcara)/launch/uav.launch">
             <arg name="robot_number" value="0" />
             <arg name="number_of_robots" value="$(arg num_of_robots)" />
         </include>
     </group>
+    
 
+    <!-- Robot 2 -->
     <group ns="uav2" >
         <include file="$(find sarc_carcara)/launch/uav.launch">
             <arg name="robot_number" value="1" />
@@ -19,12 +22,24 @@
         </include>
     </group>
 
-    <group ns="uav3" >
+
+    <!-- Robot 3 -->
+        <group ns="uav3" >
         <include file="$(find sarc_carcara)/launch/uav.launch">
             <arg name="robot_number" value="2" />
             <arg name="number_of_robots" value="$(arg num_of_robots)" />
         </include>
     </group>
+
+
+    <!-- Robot 4 -->
+       <group ns="uav4" >
+        <include file="$(find sarc_carcara)/launch/uav.launch">
+            <arg name="robot_number" value="3" />
+            <arg name="number_of_robots" value="$(arg num_of_robots)" />
+        </include>
+    </group>
+
 </launch>
 
 

@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="num_of_robots" value="1" />
+
     <!--Run rviz-->
-    <node pkg = "rviz" name = "rviz" type = "rviz" args="-d $(find robotsim)/rviz/drone1.rviz">
-    </node>
+    <node pkg = "rviz" name = "rviz" type = "rviz" args="-d $(find robotsim)/rviz/drone1.rviz" />
 
     <group ns="uav1" >
         <include file="$(find sarc_carcara)/launch/uav.launch">
             <arg name="robot_number" value="0" />
-            <arg name="number_of_robots" value="1" />
+            <arg name="number_of_robots" value="$(arg num_of_robots)" />
         </include>
     </group>
 </launch>

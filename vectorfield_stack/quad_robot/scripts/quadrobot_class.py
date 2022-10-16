@@ -1,24 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from platform import architecture
 import rospy
-import math
-from enum import Enum
-from itertools import groupby
-import numpy as np
-from math import pi, sqrt, cos, sin, tan, acos, asin, atan, atan2
-from std_msgs.msg import String
-from std_msgs.msg import Float64MultiArray
-from threading import Thread
 from std_msgs.msg import Float32
 
-import distancefield
-# import distancefield_class
-from distancefield.distancefield_class import distancefield_class
-# import distancefield.distancefield_class
+import numpy as np
 
-class quadrobot_class():
+from distancefield.distancefield_class import DistanceField
+
+class QuadRobot():
     def __init__(self, vr, kf, reverse_direction, flag_follow_obstacle, epsilon, switch_dist_0, switch_dist, m, Kv, Kw,robot_number):
         self.robot_number = robot_number
         # base variables
@@ -46,7 +36,7 @@ class quadrobot_class():
         self.D_hist = 1000 #temp
 
         #Vector field object
-        self.vec_field_obj = distancefield_class(vr, kf, reverse_direction, self.flag_follow_obstacle, self.epsilon, self.switch_dist_0, self.switch_dist)
+        self.vec_field_obj = DistanceField(vr, kf, reverse_direction, self.flag_follow_obstacle, self.epsilon, self.switch_dist_0, self.switch_dist)
 
     def stage_cb(self,data):
         self.stage = data
@@ -78,15 +68,15 @@ class quadrobot_class():
 
     # Compute a reference oientation matrix
     def get_orientation_ref(self, a_r, psi_r):
-        ar_norm = sqrt(a_r[0]**2 + a_r[1]**2 + a_r[2]**2) + 0.00000000001
+        ar_norm = np.sqrt(a_r[0]**2 + a_r[1]**2 + a_r[2]**2) + 0.00000000001
         z_r = [a_r[0]/ar_norm, a_r[1]/ar_norm, a_r[2]/ar_norm]
 
-        w_psi = [cos(psi_r), sin(psi_r), 0]
+        w_psi = [np.cos(psi_r), np.sin(psi_r), 0]
 
         dot_w_z = w_psi[0]*z_r[0] + w_psi[1]*z_r[1] + w_psi[2]*z_r[2]
 
         x_r = [w_psi[0]-dot_w_z*z_r[0], w_psi[1]-dot_w_z*z_r[1], w_psi[2]-dot_w_z*z_r[2]]
-        x_r_norm = sqrt(x_r[0]*x_r[0] + x_r[1]*x_r[1] + x_r[2]*x_r[2]) + 0.00000000001
+        x_r_norm = np.sqrt(x_r[0]*x_r[0] + x_r[1]*x_r[1] + x_r[2]*x_r[2]) + 0.00000000001
         x_r = [x_r[0]/x_r_norm, x_r[1]/x_r_norm, x_r[2]/x_r_norm]
 
         y_r = [z_r[1]*x_r[2]-z_r[2]*x_r[1], z_r[2]*x_r[0]-z_r[0]*x_r[2], z_r[0]*x_r[1]-z_r[1]*x_r[0]]
@@ -219,9 +209,9 @@ class quadrobot_class():
         axis, alpha = self.rotm2axang(Re)
 
         omega = [0,0,0]
-        omega[0] = omega_d[0] + self.kw*sin(alpha)*axis[0]
-        omega[1] = omega_d[1] + self.kw*sin(alpha)*axis[1]
-        omega[2] = omega_d[2] + self.kw*sin(alpha)*axis[2]
+        omega[0] = omega_d[0] + self.kw*np.sin(alpha)*axis[0]
+        omega[1] = omega_d[1] + self.kw*np.sin(alpha)*axis[1]
+        omega[2] = omega_d[2] + self.kw*np.sin(alpha)*axis[2]
 
         # print ("omega:   [%f, %f, %f]" % (omega[0],omega[1],omega[2]))
 
@@ -253,9 +243,9 @@ class quadrobot_class():
         VxM, VyM, VzM, flag = self.vec_field_obj.compute_field_at_p(pos_M)
         Vxm, Vym, Vzm, flag = self.vec_field_obj.compute_field_at_p(pos_m)
 
-        psi_r = atan2(Vy,Vx)
-        psi_r_M = atan2(VyM,VxM)
-        psi_r_m = atan2(Vym,Vxm)
+        psi_r = np.arctan2(Vy,Vx)
+        psi_r_M = np.arctan2(VyM,VxM)
+        psi_r_m = np.arctan2(Vym,Vxm)
 
         # psi_r = 0
         # psi_r_M = 0
@@ -319,9 +309,9 @@ class quadrobot_class():
         axis, alpha = self.rotm2axang(Re)
 
         omega = [0,0,0]
-        omega[0] = omega_d[0] + self.kw*sin(alpha)*axis[0]
-        omega[1] = omega_d[1] + self.kw*sin(alpha)*axis[1]
-        omega[2] = omega_d[2] + self.kw*sin(alpha)*axis[2]
+        omega[0] = omega_d[0] + self.kw*np.sin(alpha)*axis[0]
+        omega[1] = omega_d[1] + self.kw*np.sin(alpha)*axis[1]
+        omega[2] = omega_d[2] + self.kw*np.sin(alpha)*axis[2]
 
         self.omega = [omega[0], omega[1], omega[2]]
 
@@ -363,10 +353,10 @@ class quadrobot_class():
         if(q[0]<0):
             q = [-q[0], -q[1], -q[2], -q[3]]
 
-        s = sqrt(q[1]**2+q[2]**2+q[3]**2) + 0.000001
+        s = np.sqrt(q[1]**2+q[2]**2+q[3]**2) + 0.000001
         axis = [q[1]/s, q[2]/s, q[3]/s]
 
-        ang = 2 * acos(q[0])
+        ang = 2 * np.arccos(q[0])
 
         return axis, ang
 
@@ -382,25 +372,25 @@ class quadrobot_class():
         tr = R[0][0]+R[1][1]+R[2][2];
 
         if (tr > 0):
-            S = sqrt(tr+1.0) * 2; # S=4*qw 
+            S = np.sqrt(tr+1.0) * 2; # S=4*qw 
             qw = 0.25 * S;
             qx = (R[2][1] - R[1][2]) / S;
             qy = (R[0][2] - R[2][0]) / S; 
             qz = (R[1][0] - R[0][1]) / S; 
         elif ((R[0][0] > R[1][1]) and (R[0][0] > R[2][2])):
-            S = sqrt(1.0 + R[0][0] - R[1][1] - R[2][2]) * 2; # S=4*qx 
+            S = np.sqrt(1.0 + R[0][0] - R[1][1] - R[2][2]) * 2; # S=4*qx 
             qw = (R[2][1] - R[1][2]) / S;
             qx = 0.25 * S;
             qy = (R[0][1] + R[1][0]) / S; 
             qz = (R[0][2] + R[2][0]) / S; 
         elif (R[1][1] > R[2][2]):
-            S = sqrt(1.0 + R[1][1] - R[0][0] - R[2][2]) * 2; # S=4*qy
+            S = np.sqrt(1.0 + R[1][1] - R[0][0] - R[2][2]) * 2; # S=4*qy
             qw = (R[0][2] - R[2][0]) / S;
             qx = (R[0][1] + R[1][0]) / S; 
             qy = 0.25 * S;
             qz = (R[1][2] + R[2][1]) / S; 
         else:
-            S = sqrt(1.0 + R[2][2] - R[0][0] - R[1][1]) * 2; # S=4*qz
+            S = np.sqrt(1.0 + R[2][2] - R[0][0] - R[1][1]) * 2; # S=4*qz
             qw = (R[1][0] - R[0][1]) / S;
             qx = (R[0][2] + R[2][0]) / S;
             qy = (R[1][2] + R[2][1]) / S;

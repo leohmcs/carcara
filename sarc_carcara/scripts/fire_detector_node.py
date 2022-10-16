@@ -4,7 +4,9 @@ import rospy
 import image_geometry
 from sensor_msgs.msg import CameraInfo, Image
 from geometry_msgs.msg import PoseStamped, PointStamped, Point
+from nav_msgs.msg import Odometry
 from sarc_carcara.msg import FireDetectionResult
+from std_msgs.msg import Bool
 
 from cv_bridge import CvBridge
 import tf
@@ -15,6 +17,8 @@ import numpy as np
 
 class FireDetectorNode:
     def __init__(self) -> None:
+        self.ns = rospy.get_namespace().replace('/', '')
+
         self.tf_listener = tf.TransformListener()
         self.camera_model = image_geometry.PinholeCameraModel()
         self.is_model_set = False
@@ -25,6 +29,8 @@ class FireDetectorNode:
         
         camera_info_sub = rospy.Subscriber('bluefox_optflow/camera_info', CameraInfo, callback=self.camera_info_cb)
         image_sub = rospy.Subscriber('bluefox_optflow/image_raw', Image, self.image_cb)
+        odom_sub = rospy.Subscriber('odometry/odom_gps', Odometry, self.odom_cb)
+        disarm_sub = rospy.Subscriber('disarm', Bool, self.disarm_cb)
 
         self.fire_pos_pub = rospy.Publisher('fire_detection_result', FireDetectionResult, queue_size=10) 
 
@@ -36,14 +42,14 @@ class FireDetectorNode:
 
     def image_cb(self, msg: Image):
         if not self.is_model_set:
-            rospy.loginfo('Waiting for camera info.')
+            self.log('Waiting for camera info.', rospy.loginfo)
         else:
             img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             fire_center = self.fire_detector.locate_fire(img)
             
             result_msg = FireDetectionResult()
 
-            if fire_center is None:
+            if fire_center is None or self.pos[2] < 1.0:
                 result_msg.fire_detected = False
             else:
                 rect = self.camera_model.rectifyPoint(fire_center)
@@ -55,6 +61,15 @@ class FireDetectorNode:
             
             self.fire_pos_pub.publish(result_msg)
     
+    def odom_cb(self, msg: Odometry):
+        self.pos = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
+        self.quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
+    
+    def disarm_cb(self, msg: Bool):
+        if msg.data:
+            return
+            rospy.signal_shutdown("Disarm request received. Shutind down fire detection system.")
+
     def point_in_world(self, p_c):
         pose_msg = self.pose_msg(p_c)
         ns = pose_msg.header.frame_id.split("/")[0]
@@ -101,6 +116,10 @@ class FireDetectorNode:
     def pose_msg_to_array(self, msg: PoseStamped):
         pos = msg.pose.position
         return np.array([pos.x, pos.y, pos.z])
+
+    def log(self, msg, f):
+        msg = "[{}] ".format(self.ns) + msg
+        f(msg)
 
 rospy.init_node('fire_detector_node')
 node = FireDetectorNode()

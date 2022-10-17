@@ -1,7 +1,7 @@
 # Carcará
 Team: Sofia Paiva, Artur Costa, João Baião, Leonardo Santos.
 
-Institution: Universidade Federal de Minas Gerais (UFMG)
+Institution: Universidade Federal de Minas Gerais (UFMG).
 
 This repository contains:
 

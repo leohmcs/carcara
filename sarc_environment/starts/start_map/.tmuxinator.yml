@@ -20,17 +20,16 @@ windows:
         - export UAV_NAME=uav2; waitForSimulation; roslaunch mrs_uav_status status.launch
         - export UAV_NAME=uav3; waitForSimulation; roslaunch mrs_uav_status status.launch
         # - export UAV_NAME=uav4; waitForSimulation; roslaunch mrs_uav_status status.launch
+        # - export UAV_NAME=uav5; waitForSimulation; roslaunch mrs_uav_status status.launch
   - spawn:
       layout: tiled
       panes:
         # uav 1
         - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos1.yaml"
-        # uav 2
         - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "2 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos2.yaml"
-        # uav 3
         - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "3 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos3.yaml"
-        # uav 4
         # - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "4 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos4.yaml"
+        # - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "5 $UAV_TYPE --enable-rangefinder --enable-ground-truth --enable-bluefox-camera --pos_file `pwd`/pos_ground/pos5.yaml"
   - control:
       layout: tiled
       panes:
@@ -38,17 +37,15 @@ windows:
           - export UAV_NAME=uav2; waitForOdometry; roslaunch mrs_uav_general core.launch
           - export UAV_NAME=uav3; waitForOdometry; roslaunch mrs_uav_general core.launch
           # - export UAV_NAME=uav4; waitForOdometry; roslaunch mrs_uav_general core.launch
+          # - export UAV_NAME=uav5; waitForOdometry; roslaunch mrs_uav_general core.launch
   - arming:
       layout: tiled
       panes:
-        # uav 1
         - waitForSimulation; rosrun sarc_environment fall.py 1
-        # uav 2
         - waitForSimulation; rosrun sarc_environment fall.py 2
-        # uav 3
         - waitForSimulation; rosrun sarc_environment fall.py 3
-        # uav 4
         # - waitForSimulation; rosrun sarc_environment fall.py 4
+        # - waitForSimulation; rosrun sarc_environment fall.py 5
   - solution:
       layout: tiled
       panes:

@@ -12,7 +12,7 @@ class FireDetector:
         '''
         Locate fire in image.
 
-        return pixel coordinates of fire bounding box center if detected; None otherwise.
+        return pixel coordinates of the fire bounding box if detected; None otherwise.
         '''
 
         firing_trees = self.__get_firing_trees(img) 
@@ -32,10 +32,10 @@ class FireDetector:
         end = (max_x, min_y)
         self.__show_result(img, fire=True, start=start, end=end)
 
-        mid_x = int((min_x + max_x)/2)
-        mid_y = int((min_y + max_y)/2)
+        # mid_x = int((min_x + max_x)/2)
+        # mid_y = int((min_y + max_y)/2)
         
-        return [mid_x, mid_y]
+        return [min_x, min_y, max_x, max_y]
 
     def __show_result(self, img, fire=True, start=None, end=None):
         if fire:

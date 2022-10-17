@@ -887,23 +887,9 @@ class DroneSimNode(object):
 
         self.arrange()
 
-        initial_odom = rospy.wait_for_message("ground_truth", Odometry)
-        self.state[0] = initial_odom.pose.pose.position.x
-        self.state[1] = initial_odom.pose.pose.position.y
-        self.state[2] = initial_odom.pose.pose.position.z
-        self.state[3] = initial_odom.pose.pose.orientation.x
-        self.state[4] = initial_odom.pose.pose.orientation.y
-        self.state[5] = initial_odom.pose.pose.orientation.z
-        self.state[6] = initial_odom.pose.pose.orientation.w
-        self.state[7] = 0.0
-        self.state[8] = 0.0
-        self.state[9] = 0.0
-
-        self.history.append([self.state[0], self.state[1], self.state[2]])
-
-        print("self.state: ", self.state)
-        print("self.robot_arm_len: ", self.robot_arm_len)
-        print("self.robot_m: ", self.robot_m)
+        # print("self.state: ", self.state)
+        # print("self.robot_arm_len: ", self.robot_arm_len)
+        # print("self.robot_m: ", self.robot_m)
 
         # publishers
         self.pub_pose = rospy.Publisher("pose", Pose, queue_size=1)
@@ -918,22 +904,35 @@ class DroneSimNode(object):
         self.pub_accel = rospy.Publisher("cmd_accel", Accel, queue_size=10)
 
         # subscribers
-        rospy.Subscriber("odometry/odom_gps", Odometry, self.odometry_callback)
+        rospy.Subscriber("odometry/odom_gps", Odometry, self.odometry_cb)
         rospy.Subscriber("acrorate", Quaternion, self.callback_acrorate)
         rospy.Subscriber("trajectory_state",  Float32, self.trajectory_state_cb)
-        if self.number_of_robots > 0:
-            for i in range(self.number_of_robots):
-                self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i}/ground_truth",  Odometry, self.odometry_cb, (i))
+        # if self.number_of_robots > 0:
+        #     for i in range(self.number_of_robots):
+        #         self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/ground_truth",  Odometry, self.odometry_cb, (i))
+
+        initial_odom = rospy.wait_for_message("odometry/odom_gps", Odometry)
+        self.state[0] = initial_odom.pose.pose.position.x
+        self.state[1] = initial_odom.pose.pose.position.y
+        self.state[2] = initial_odom.pose.pose.position.z
+        self.state[3] = initial_odom.pose.pose.orientation.x
+        self.state[4] = initial_odom.pose.pose.orientation.y
+        self.state[5] = initial_odom.pose.pose.orientation.z
+        self.state[6] = initial_odom.pose.pose.orientation.w
+        self.state[7] = 0.0
+        self.state[8] = 0.0
+        self.state[9] = 0.0
+
+        self.history.append([self.state[0], self.state[1], self.state[2]])
 
 
-    def odometry_callback(self, data):
+
+    def odometry_cb(self, data):
         """Callback to get the pose from odometry data
         :param data: odometry ROS message
         """
         pos = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
-
         quat = [data.pose.pose.orientation.w, data.pose.pose.orientation.x, data.pose.pose.orientation.y, data.pose.pose.orientation.z]
-
         vel_b = [data.twist.twist.linear.x, data.twist.twist.linear.y, data.twist.twist.linear.z]
 
         R_bw = self.quat2rotm(quat)
@@ -963,8 +962,8 @@ class DroneSimNode(object):
         self.tau = data.w
         self.omega = [data.x, data.y, data.z]
 
-    def odometry_cb(self, data, args):
-        self.posr[args] = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
+    # def odometry_cb(self, data, args):
+    #     self.posr[args] = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
 
     def callback_wheels(self, data):
         """Callback to get the reference velocity for the robot

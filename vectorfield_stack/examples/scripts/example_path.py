@@ -11,6 +11,7 @@ import tf
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Float32, Float32MultiArray, Bool
 from sarc_carcara.msg import FireDetectionResult
+from mrs_msgs.msg import UavStatus
 
 import numpy as np
 import sys
@@ -42,26 +43,35 @@ class Paths:
         self.pos_des = []
         self.pos_des_now = []
         self.got_there = []
+        # self.stages = []
         self.fire_extinguished = []
         self.pos_subscriber = []
         self.vis_subscriber = []
+        # self.stages_subscriber = []
+        self.status_subscribers = []
         self.reunited = 0
 
         for i in range(self.number_of_robots):
             self.pos.append([0,0,0])
             self.seen_it.append(False)
             self.pos_des.append([])
+            # self.stages.append(0)
             self.pos_des_now.append([])
             self.got_there.append(0)
             self.fire_extinguished.append([])
             self.pos_subscriber.append([])
             self.vis_subscriber.append([])
+            self.status_subscribers.append([])
+            # self.stages_subscriber.append(0)
 
         # Variables of simulation states and set constants
         self.search_site = 0
         self.saw_it = 0
         self.got_there = 0
         self.got_there2 = 0
+        self.failures_list = []
+        self.etapa = 0
+        self.checked_redundance = False
         self.height = 20
         self.predefined = [-20, -20, self.height]
         self.range_vision = 15
@@ -69,6 +79,7 @@ class Paths:
         self.area.x = 100
         self.area.y = 100
         self.pos_search_site = []
+        self.uavs_status = [True]*self.number_of_robots
 
         self.freq = 10.0
         self.rate = rospy.Rate(10)
@@ -83,12 +94,16 @@ class Paths:
         # Subscribers
         if self.number_of_robots > 0:
             for i in range(self.number_of_robots):
-                self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/ground_truth",  Odometry, self.odometry_cb, (i))
+                self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/odometry/odom_gps",  Odometry, self.odometry_cb, (i))
                 self.vis_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/fire_detection_result",  FireDetectionResult, self.vision_cb, (i))
+                # self.stages_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/trajectory_state",  Float32, self.stages_cb, (i))
+                self.status_subscribers[i] = rospy.Subscriber(f"/uav{i + 1}/mrs_uav_status/uav_status", UavStatus, self.status_cb, (i))
 
         self.last_log_msg = ""
 
         self.rate.sleep()
+
+        rospy.logwarn("AAAAAAAAAAA")
 
 
     # Callback of robots positions data
@@ -101,34 +116,12 @@ class Paths:
         self.pos_des[args] = [data.position.x, data.position.y, self.height]
 
         #self.fire_extinguished[args] = False
-        
 
-    # ----------  ----------  ----------  ----------  ----------
+    # def states_cb(self,data,args):
+    #     self.stages[args] = data
 
-    '''
-    # Function to generate path of search
-    def refference_path_1(self,N,p_0):
-        # Parameter
-        dp = 5*2*pi/N
-        p = -dp
-        # Loop to sample the curve
-        path = [[],[],[]]
-        for k in range(N):
-            # Increment parameter
-            p = p + dp
-            # Compute a point of the ellipse in a local frame
-            x_ref0 = 0.02*k * self.a * cos(p+3)
-            y_ref0 = 0.02*k * self.b * sin(p+3)
-            # Rotate and displace the point
-            x_ref = cos(self.phi) * x_ref0 - sin(self.phi) * y_ref0 + p_0[0] + 0.4
-            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + p_0[1] + 0.4
-            # Save the computed point
-            path[0].append(x_ref)
-            path[1].append(y_ref)
-            path[2].append(self.height)
-        return (path)'''
-
-
+    def status_cb(self, data, args):
+        self.uavs_status[args] = data.null_tracker
 
     # ----------  ----------  ----------  ----------  ----------
 
@@ -419,19 +412,36 @@ class Paths:
     # ----------  ----------  ----------  ----------  ----------
 
     # Function to send a array of markers, representing the curve, to rviz
-    def arrange_cells(self,p0,h):
-        if self.number_of_robots == 1:
+    def arrange_cells(self,p0,h,failures):
+        num_rob = self.number_of_robots - len(failures)
+        rob_num = self.robot_number 
+
+        for i in failures:
+            if rob_num > i:
+                rob_num -= 1
+
+        if num_rob == 1:
             del_x = self.area.x/2
             del_y = -self.area.y/2
             del_w = self.area.x
             del_h = self.area.y
 
-        elif self.number_of_robots == 3:
-            if self.robot_number == 0 or self.robot_number == 1:
+        elif num_rob == 2:
+            del_w = self.area.x/2
+            del_h = self.area.y
+            del_y = -self.area.y/2
+
+            if rob_num == 1:
+                del_x = self.area.x/2
+            else:
+                del_x = 0
+
+        elif num_rob == 3:
+            if rob_num == 0 or rob_num == 1:
                 del_w = 2*self.area.x/3
                 del_x = del_w - self.area.x/2
                 del_h = self.area.y/2
-                if self.robot_number == 0:
+                if rob_num == 0:
                     del_y = 0
                 else:
                     del_y = -del_h
@@ -441,25 +451,42 @@ class Paths:
                 del_h = self.area.y
                 del_y = -self.area.y/2
 
-        elif self.number_of_robots == 5:
-            if self.robot_number == 0 or self.robot_number == 2 or self.robot_number == 3:
+        elif num_rob == 4:
+            del_w = self.area.x/2
+            del_h = self.area.y/2
+
+            if rob_num == 0 or rob_num == 2:
+                del_x = 0
+                if rob_num == 0:
+                    del_y = 0
+                else:
+                    del_y = -del_h
+            else:
+                del_x = self.area.x/2
+                if rob_num == 1:
+                    del_y = -self.area.y/2
+                else:
+                    del_y = 0
+
+        elif num_rob == 5:
+            if rob_num == 0 or rob_num == 2 or rob_num == 3:
                 del_w = .75*self.area.x 
                 del_x = del_w - self.area.x /2
             else:
                 del_w = .25*self.area.x 
                 del_x = self.area.x/2
             
-            if self.robot_number == 0 or self.robot_number == 2 or self.robot_number == 3:
+            if rob_num == 0 or rob_num == 2 or rob_num == 3:
                 del_h = self.area.y/3 
-                if self.robot_number == 0:
+                if rob_num == 0:
                     del_y = del_h/2
-                elif self.robot_number == 3:
+                elif rob_num == 3:
                     del_y = - del_h/2
                 else:
                     del_y = - 3*del_h/2
             else:
                 del_h = self.area.y/2
-                if self.robot_number == 1:
+                if rob_num == 1:
                     del_y = 0
                 else:
                     del_y = - self.area.y/2
@@ -650,10 +677,8 @@ class Paths:
 
         self.arrange()
         p0 = self.pos[self.robot_number]
-        # Generate one of the curve types
-        del_x, del_y, del_w, del_h, self.pos_search_site = self.arrange_cells(p0, self.range_vision)
-        # print(self.pos_search_site)
 
+        del_x, del_y, del_w, del_h, self.pos_search_site = self.arrange_cells(p0, self.range_vision,[])
         path = self.refference_path_1(self.range_vision,p0,del_x,del_y,del_w,del_h)
         path_msg = self.create_path_msg(path,False)
 
@@ -669,21 +694,10 @@ class Paths:
         print ("Sampled samples: ", self.number_of_samples)
         print ("\33[92m----------------------------\33[0m")
 
-        aux = 1
-        self.etapa = 0
-
         self.pub_state.publish(self.etapa)
 
         # Simulate Process on Rviz
         while not rospy.is_shutdown():
-
-            #print(aux)
-
-            #print(f"Etapa: {self.etapa}")
-            #print(f"seeenit{self.seen_it}")
-            #print(f"posdes{self.pos_des}")
-            #print(f"fireextinguished{self.fire_extinguished}")
-            #print(f"subscriber{self.vis_subscriber}")
 
             for i in range(len(self.seen_it)):
                 if self.seen_it[i] == 1.0:
@@ -691,13 +705,14 @@ class Paths:
                     whosawit = i
 
             # States Machine
-            # print(self.etapa, self.got_there, self.reunited)
+            
             # Wait 5 seconds Stage
             if (self.etapa == 0):
-                rospy.sleep(5)
-                self.etapa += 1
-                # print(f"a{self.robot_number}")
+                if not self.uavs_status[self.robot_number]:
+                    self.etapa += 1
+
                 poki = self.pos[self.robot_number]
+                rospy.sleep(5)
 
             # Go to Search Site
             elif (not self.search_site and self.etapa == 1 and not self.saw_it):
@@ -718,8 +733,24 @@ class Paths:
                 if (x <= 1.0):
                     self.search_site = 1
                 
+            # Check if any robot has failed
+            elif(self.search_site and not self.checked_redundance and self.etapa == 1):
+                for i in range(len(self.uavs_status)):
+                    if self.uavs_status[i]:
+                        self.failures_list.append(i)
+
+                rospy.loginfo("{}, {}".format(rospy.get_namespace(), self.failures_list))
+
+                if len(self.failures_list) > 0:
+                    del_x, del_y, del_w, del_h, self.pos_search_site = self.arrange_cells(p0, self.range_vision,self.failures_list)
+                    path = self.refference_path_1(self.range_vision,p0,del_x,del_y,del_w,del_h)
+                    path_msg = self.create_path_msg(path,False)
+
+                self.checked_redundance = 1
+
+
             # Search Fire Stage
-            elif (self.search_site and not self.saw_it and self.etapa == 1):
+            elif (self.search_site and self.checked_redundance and not self.saw_it and self.etapa == 1):
                 self.pub_state.publish(self.etapa)
                 self.send_curve_to_rviz(path, self.pub_rviz_curve)
                 self.pub_path.publish(path_msg)

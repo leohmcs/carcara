@@ -11,7 +11,7 @@ quadrobot:
     kw: 8.0 #4.0 # gain of the orientation error
 
 topics:
-    pose_topic_name: "ground_truth"  # "odometry/odom_gps" # name of the topic in which the pose will be obtained
+    pose_topic_name: "odometry/odom_gps" # name of the topic in which the pose will be obtained
     pose_topic_type: "Odometry" # Options: 'Odometry'
     acrorate_cmd_topic_name: "acrorate" # name of the topic in which the forward and angular velocities will be published
     cmd_vel_topic_name: "cmd_vel"

@@ -36,12 +36,12 @@ class Activator:
         wrench.force = Vector3(*force)
         duration = rospy.Duration(100)
         
-        rospy.loginfo('arming')
-        self.arm(1)
-        rospy.sleep(5)
         dele = DeleteModelRequest()
         dele.model_name = "SARckc_floor"
         self.delete(dele)
+        rospy.loginfo('arming')
+        self.arm(1)
+        rospy.sleep(5)
         rospy.loginfo('activating')
         self.activate()
         rospy.sleep(8)

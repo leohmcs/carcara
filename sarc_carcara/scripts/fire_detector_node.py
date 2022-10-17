@@ -17,6 +17,9 @@ import numpy as np
 
 class FireDetectorNode:
     def __init__(self) -> None:
+        self.pos = None
+        self.ori = None
+
         self.ns = rospy.get_namespace().replace('/', '')
 
         self.tf_listener = tf.TransformListener()
@@ -45,13 +48,21 @@ class FireDetectorNode:
             self.log('Waiting for camera info.', rospy.loginfo)
         else:
             img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            fire_center = self.fire_detector.locate_fire(img)
+            fire_vertices = self.fire_detector.locate_fire(img)
             
             result_msg = FireDetectionResult()
 
-            if fire_center is None or self.pos[2] < 1.0:
+            if self.pos is None or self.ori is None:
+                return
+                
+            if fire_vertices is None or self.pos[2] < 1.0:
                 result_msg.fire_detected = False
             else:
+                # diag = self.estimate_fire_diagonal(fire_vertices)
+
+                mid_x = int((fire_vertices[0] + fire_vertices[2])/2)
+                mid_y = int((fire_vertices[1] + fire_vertices[3])/2)
+                fire_center = [mid_x, mid_y]
                 rect = self.camera_model.rectifyPoint(fire_center)
                 p_c = self.camera_model.projectPixelTo3dRay(rect) # point for z = 1 in the camera frame
                 fire_pos_world = self.point_in_world(p_c)
@@ -74,11 +85,11 @@ class FireDetectorNode:
         pose_msg = self.pose_msg(p_c)
         ns = pose_msg.header.frame_id.split("/")[0]
         self.tf_listener.waitForTransform("{}/gps_origin".format(ns), pose_msg.header.frame_id, rospy.Time.now(), rospy.Duration(2.0))
-        ray_world = self.pose_msg_to_array(self.tf_listener.transformPose("{}/gps_origin".format(ns), pose_msg)) - np.array([0.0, 0.0, 5.0]) # shift z-axis to consider tree height
+        ray_world = self.pose_msg_to_array(self.tf_listener.transformPose("{}/gps_origin".format(ns), pose_msg)) - np.array([0.0, 0.0, 3.0]) # shift z-axis to consider tree height
         
         self.tf_listener.waitForTransform("{}/gps_origin".format(ns), pose_msg.header.frame_id, rospy.Time.now(), rospy.Duration(2.0))
         (camera_pos, _) = self.tf_listener.lookupTransform("{}/gps_origin".format(ns), self.camera_model.tfFrame(), rospy.Time(0))
-        camera_pos = np.array(camera_pos) - np.array([0.0, 0.0, 5.0]) # shift z-axis to consider tree height
+        camera_pos = np.array(camera_pos) - np.array([0.0, 0.0, 3.0]) # shift z-axis to consider tree height
 
         p = ray_world - camera_pos
         theta = np.arcsin(np.sqrt(p[0]**2 + p[1]**2)/np.linalg.norm(p))
@@ -87,6 +98,10 @@ class FireDetectorNode:
 
         pos_fire = pos_fire_length*(np.array(p)/np.linalg.norm(p)) + camera_pos
         return pos_fire
+
+    # def estimate_fire_diagonal(self, fire_vertices):
+    #     ''' Return length of largest diagonal'''
+    #     p1 = self.point_in_world([fire_vertices])
 
     def set_model(self):
         self.camera_model.fromCameraInfo(self.camera_left_info, self.camera_right_info)

@@ -4,7 +4,7 @@
     <arg name="number_of_robots" />
 
     <!-- Run the node that will simulate the system in RViz -->
-    <node pkg="robotsim" name="robot" type="drone_sim.py">
+    <node pkg="robotsim" name="robot" type="drone_sim.py" output="screen">
         <param name="robot_number" type="int" value="$(arg robot_number)" />
         <param name="number_of_robots" type="int" value="$(arg number_of_robots)" />
         <rosparam command="load" file="$(find robotsim)/config/drone_sim.yaml" />

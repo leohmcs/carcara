@@ -11,7 +11,7 @@
     </node>
 
     <!--Run the node that will generate the paths -->
-    <node pkg="examples" name="path_generator" type="example_path.py" output="screen"> 
+    <node pkg="sarc_carcara" name="path_generator" type="path_generator.py" output="screen"> 
         <param name="robot_number" type="int" value="$(arg robot_number)" />
         <param name="number_of_robots" type="int" value="$(arg number_of_robots)" />
         <rosparam command="load" file="$(find examples)/config/pub_path.yaml" />

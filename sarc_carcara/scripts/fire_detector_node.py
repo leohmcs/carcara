@@ -3,7 +3,7 @@
 import rospy
 import image_geometry
 from sensor_msgs.msg import CameraInfo, Image
-from geometry_msgs.msg import PoseStamped, PointStamped, Point
+from geometry_msgs.msg import PoseStamped, Point
 from nav_msgs.msg import Odometry
 from sarc_carcara.msg import FireDetectionResult
 from std_msgs.msg import Bool
@@ -18,7 +18,8 @@ import numpy as np
 class FireDetectorNode:
     def __init__(self) -> None:
         self.pos = None
-        self.ori = None
+        self.quat = None
+        self.tree_height = 7
 
         self.ns = rospy.get_namespace().replace('/', '')
 
@@ -33,7 +34,7 @@ class FireDetectorNode:
         camera_info_sub = rospy.Subscriber('bluefox_optflow/camera_info', CameraInfo, callback=self.camera_info_cb)
         image_sub = rospy.Subscriber('bluefox_optflow/image_raw', Image, self.image_cb)
         odom_sub = rospy.Subscriber('odometry/odom_gps', Odometry, self.odom_cb)
-        disarm_sub = rospy.Subscriber('disarm', Bool, self.disarm_cb)
+        # disarm_sub = rospy.Subscriber('disarm', Bool, self.disarm_cb)
 
         self.fire_pos_pub = rospy.Publisher('fire_detection_result', FireDetectionResult, queue_size=10) 
 
@@ -52,7 +53,8 @@ class FireDetectorNode:
             
             result_msg = FireDetectionResult()
 
-            if self.pos is None or self.ori is None:
+            if self.pos is None or self.quat is None:
+                rospy.loginfo('[{}] Odom not received.'.format(self.ns))
                 return
                 
             if fire_vertices is None or self.pos[2] < 1.0:
@@ -66,7 +68,7 @@ class FireDetectorNode:
                 rect = self.camera_model.rectifyPoint(fire_center)
                 p_c = self.camera_model.projectPixelTo3dRay(rect) # point for z = 1 in the camera frame
                 fire_pos_world = self.point_in_world(p_c)
-                # rospy.loginfo("Fire detected at position ({}, {}, {})!".format(fire_pos_world[0], fire_pos_world[1], fire_pos_world[2]))
+                rospy.loginfo("Fire detected at position ({}, {}, {})!".format(fire_pos_world[0], fire_pos_world[1], fire_pos_world[2]))
                 result_msg.fire_detected = True
                 result_msg.position = self.point_msg(fire_pos_world)
             
@@ -76,25 +78,24 @@ class FireDetectorNode:
         self.pos = [msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z]
         self.quat = [msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z, msg.pose.pose.orientation.w]
     
-    def disarm_cb(self, msg: Bool):
-        if msg.data:
-            return
-            rospy.signal_shutdown("Disarm request received. Shutind down fire detection system.")
+    # def disarm_cb(self, msg: Bool):
+    #     if msg.data:
+    #         return
 
     def point_in_world(self, p_c):
         pose_msg = self.pose_msg(p_c)
         ns = pose_msg.header.frame_id.split("/")[0]
         self.tf_listener.waitForTransform("{}/gps_origin".format(ns), pose_msg.header.frame_id, rospy.Time.now(), rospy.Duration(2.0))
-        ray_world = self.pose_msg_to_array(self.tf_listener.transformPose("{}/gps_origin".format(ns), pose_msg)) - np.array([0.0, 0.0, 3.0]) # shift z-axis to consider tree height
+        ray_world = self.pose_msg_to_array(self.tf_listener.transformPose("{}/gps_origin".format(ns), pose_msg))
         
         self.tf_listener.waitForTransform("{}/gps_origin".format(ns), pose_msg.header.frame_id, rospy.Time.now(), rospy.Duration(2.0))
         (camera_pos, _) = self.tf_listener.lookupTransform("{}/gps_origin".format(ns), self.camera_model.tfFrame(), rospy.Time(0))
-        camera_pos = np.array(camera_pos) - np.array([0.0, 0.0, 3.0]) # shift z-axis to consider tree height
+        camera_pos = np.array(camera_pos)
 
         p = ray_world - camera_pos
         theta = np.arcsin(np.sqrt(p[0]**2 + p[1]**2)/np.linalg.norm(p))
 
-        pos_fire_length = np.abs(camera_pos[2]/np.cos(theta))
+        pos_fire_length = np.abs((camera_pos[2] - self.tree_height)/np.cos(theta))     # shift z-axis to consider tree height
 
         pos_fire = pos_fire_length*(np.array(p)/np.linalg.norm(p)) + camera_pos
         return pos_fire

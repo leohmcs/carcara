@@ -352,7 +352,7 @@ class Paths:
 
             # Rotate and displace the point
             x_ref = cos(self.phi) * x_ref0 - sin(self.phi) * y_ref0 + posi[0] #+ 3*self.a/2
-            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + posi[1] + (5 - self.range_of_action*self.first_y[self.robot_number])*self.b
+            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + posi[1] + 5*self.b
 
             # Save the computed point
             path[0].append(x_ref)

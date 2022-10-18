@@ -216,7 +216,7 @@ class DistanceField():
         return u_star
 
 
-    def field_from_equation(self, pos):
+    def field_from_equation(self, pos, closest):
         x = pos[0]
         y = pos[1]
         z = pos[2]
@@ -262,7 +262,7 @@ class DistanceField():
         Vz = self.v_r * (G * grad_D[2] + H * T[2])
 
         if(self.flag_follow_obstacle):
-            closest_vec = [self.closest_world[0]-self.pos[0], self.closest_world[1]-self.pos[1], self.closest_world[2]-self.pos[2]]
+            closest_vec = [closest[0]-self.pos[0], closest[1]-self.pos[1], closest[2]-self.pos[2]]
 
             Do = math.sqrt(closest_vec[0]**2 + closest_vec[1]**2 + closest_vec[2]**2)
 
@@ -307,7 +307,7 @@ class DistanceField():
         return Vx, Vy, Vz, reached_endpoint
 
 
-    def field_from_points(self, pos):
+    def field_from_points(self, pos, closet):
         x, y, z = pos
         local_path = self.path
         size_path = len(local_path)
@@ -388,7 +388,7 @@ class DistanceField():
         if(self.flag_follow_obstacle):
             # print(self.closest_world)
 
-            closest_vec = [self.closest_world[0]-self.pos[0], self.closest_world[1]-self.pos[1], self.closest_world[2]-self.pos[2]]
+            closest_vec = [closet[0]-self.pos[0], closet[1]-self.pos[1], closet[2]-self.pos[2]]
 
             Do = math.sqrt(closest_vec[0]**2 + closest_vec[1]**2 + closest_vec[2]**2)
 
@@ -463,22 +463,22 @@ class DistanceField():
         return Vx, Vy, Vz, reached_endpoint
 
 
-    def compute_field_at_p(self, pos):
+    def compute_field_at_p(self, pos,closew):
         """Compute the vector field that will guide the robot through a path
         :return:
             Vx, Vy, reached_endpoint
         """
         if (self.flag_from_equation):
-            Vx, Vy, Vz, reached_endpoint = self.field_from_equation(pos)
+            Vx, Vy, Vz, reached_endpoint = self.field_from_equation(pos,closew)
         else:
-            Vx, Vy, Vz, reached_endpoint = self.field_from_points(pos)
+            Vx, Vy, Vz, reached_endpoint = self.field_from_points(pos,closew)
         
         return Vx, Vy, Vz, reached_endpoint
 
 
-    def vec_field_path(self):
-        Vx, Vy, Vz, reached_endpoint = self.compute_field_at_p(self.pos)
-        return Vx, Vy, Vz, reached_endpoint
+    # def vec_field_path(self):
+    #     Vx, Vy, Vz, reached_endpoint = self.compute_field_at_p(self.pos)
+    #     return Vx, Vy, Vz, reached_endpoint
 
 
     @staticmethod

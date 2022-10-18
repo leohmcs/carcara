@@ -51,13 +51,13 @@ class QuadRobot():
         py = [pos[0],pos[1]+delta,pos[2]]
         pz = [pos[0],pos[1],pos[2]+delta]
 
-        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(pos)
+        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(pos,self.closest_world)
         f0 = [Vx,Vy,Vz]
-        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(px)
+        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(px,self.closest_world)
         fx = [Vx,Vy,Vz]
-        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(py)
+        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(py,self.closest_world)
         fy = [Vx,Vy,Vz]
-        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(pz)
+        Vx,Vy,Vz,flag = self.vec_field_obj.compute_field_at_p(pz,self.closest_world)
         fz = [Vx,Vy,Vz]
 
         J[0][0] = (fx[0]-f0[0])/delta; J[0][1] = (fy[0]-f0[0])/delta; J[0][2] = (fz[0]-f0[0])/delta
@@ -87,7 +87,7 @@ class QuadRobot():
 
     # Compute a reference acceleration
     def get_acc_ref(self, pos, vel, out=[0], id=0):
-        Vx, Vy, Vz, flag = self.vec_field_obj.compute_field_at_p(pos)
+        Vx, Vy, Vz, flag = self.vec_field_obj.compute_field_at_p(pos,self.closest_world)
         f = [Vx, Vy, Vz]
         J = self.compute_Jacobian(pos)
 
@@ -235,13 +235,13 @@ class QuadRobot():
         z_b = [R[0][2], R[1][2], R[2][2]]
         z_hat = [0, 0, 1]
 
-        Vx, Vy, Vz, flag = self.vec_field_obj.compute_field_at_p(pos)
+        Vx, Vy, Vz, flag = self.vec_field_obj.compute_field_at_p(pos,self.closest_world)
         f = [Vx, Vy, Vz]
 
         pos_M = [pos[0]+vel[0]*delta_t, pos[1]+vel[1]*delta_t, pos[2]+vel[2]*delta_t]
         pos_m = [pos[0]-vel[0]*delta_t, pos[1]-vel[1]*delta_t, pos[2]-vel[2]*delta_t]
-        VxM, VyM, VzM, flag = self.vec_field_obj.compute_field_at_p(pos_M)
-        Vxm, Vym, Vzm, flag = self.vec_field_obj.compute_field_at_p(pos_m)
+        VxM, VyM, VzM, flag = self.vec_field_obj.compute_field_at_p(pos_M,self.closest_world)
+        Vxm, Vym, Vzm, flag = self.vec_field_obj.compute_field_at_p(pos_m,self.closest_world)
 
         psi_r = np.arctan2(Vy,Vx)
         psi_r_M = np.arctan2(VyM,VxM)

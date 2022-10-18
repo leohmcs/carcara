@@ -8,7 +8,7 @@ N_curve: 1
 N_points: 400
 
 # Stretch factor of the curve in the x direction
-a: 1.5
+a: 2
 # Stretch factor of the curve in the y direction
 b: 1.0
 # Rotation of the curve around the z axis (in dregrees)

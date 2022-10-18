@@ -1,5 +1,3 @@
-Robot_number: 0
-
 vector_field:
     vr: 1.0 # reference forward speed for the vector field
     kf: 5.0 # convergence gain of the vector field

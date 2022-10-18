@@ -1,2 +1,3 @@
 bool fire_detected
 geometry_msgs/Point position
+float32 largest_diag

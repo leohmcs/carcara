@@ -43,6 +43,7 @@ class Paths:
         self.pos_des = []
         self.pos_des_now = []
         self.got_there = []
+        self.largest_diag_seen = [0]*self.number_of_robots
         # self.stages = []
         self.fire_extinguished = []
         self.pos_subscriber = []
@@ -73,6 +74,8 @@ class Paths:
         self.etapa = 0
         self.checked_redundance = False
         self.height = 20
+        self.height_fire = 15
+        self.range_of_action = 0.5
         self.predefined = [-100, -100, self.height]
         self.range_vision = 15
         self.area = Point()
@@ -103,9 +106,6 @@ class Paths:
 
         self.rate.sleep()
 
-        rospy.logwarn("AAAAAAAAAAA")
-
-
     # Callback of robots positions data
     def odometry_cb(self,data,args):
         self.pos[args] = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
@@ -114,6 +114,7 @@ class Paths:
     def vision_cb(self,data, args):
         self.seen_it[args] = data.fire_detected
         self.pos_des[args] = [data.position.x, data.position.y, self.height]
+        self.largest_diag_seen[args] = data.largest_diag
 
         #self.fire_extinguished[args] = False
 
@@ -165,7 +166,7 @@ class Paths:
         if del_w < del_h:
             while self.comparison(p_now.x, p_final_x, right_to_area):
 
-                    if inicio == 1: # sobe
+                    if inicio == 1: # up
                         princ = np.arange(p_now_y, p_now_y + del_h - h,0.1)
             
                         path[0] = np.hstack((path[0],p_now_x*np.ones(len(princ))))
@@ -176,7 +177,7 @@ class Paths:
                         p_now.y = p_now_y
                         inicio = 2
 
-                    elif inicio == 2: # avança
+                    elif inicio == 2: # next
                         if right_to_area:
                             princ = np.arange(p_now_x, p_now_x - h,-0.1)
                         else:
@@ -196,7 +197,7 @@ class Paths:
 
                         inicio = 3
 
-                    elif inicio == 3: # desce
+                    elif inicio == 3: # down
                         princ = np.arange(p_now_y, p_now_y - del_h + h,-0.1)
 
                         path[0] = np.hstack((path[0],p_now_x*np.ones(len(princ))))
@@ -207,7 +208,7 @@ class Paths:
                         p_now.y = p_now_y
                         inicio = 4
 
-                    elif inicio == 4: # avança
+                    elif inicio == 4: # next
                         if right_to_area:
                             princ = np.arange(p_now_x, p_now_x - h,-0.1)
                         else:
@@ -232,7 +233,7 @@ class Paths:
         else:
             while self.comparison(p_now.y, p_final_y, above_area):
                 
-                if inicio2 == 1: # esquerda
+                if inicio2 == 1: # left
                     princ = np.arange(p_now_x, p_now_x - del_w + h,-0.1)
 
                     path[0] = np.hstack((path[0],princ))
@@ -243,7 +244,7 @@ class Paths:
                     p_now.x = p_now_x
                     inicio2 = 2
 
-                elif inicio2 == 2: # avança
+                elif inicio2 == 2: # next
                     if above_area:
                         princ = np.arange(p_now_y, p_now_y - h,-0.1)
                     else:
@@ -263,7 +264,7 @@ class Paths:
 
                     inicio2 = 3
 
-                elif inicio2 == 3: # direita
+                elif inicio2 == 3: # right
                     princ = np.arange(p_now_x, p_now_x + del_w - h,0.1)
 
                     path[0] = np.hstack((path[0],princ))
@@ -274,7 +275,7 @@ class Paths:
                     p_now.x = p_now_x
                     inicio2 = 4
 
-                elif inicio2 == 4: # avança
+                elif inicio2 == 4: # next
                     if above_area:
                         princ = np.arange(p_now_y, p_now_y - h,-0.1)
                     else:
@@ -309,7 +310,6 @@ class Paths:
         # Parameter
         dp = 2*pi/N
         p = -dp
-        #p_0 = [posi[0]+0.005*p_des[0],posi[1]+0.005*p_des[1],posi[2]+0.005*p_des[2]]
 
         path = [[],[],[]]
         for k in range(N):
@@ -318,28 +318,10 @@ class Paths:
             p = p + dp
 
             # Compute a point of the "rectangular" in a local frame
-            '''
-            x_ref = p_des[0] + 0.0001*k
-            y_ref = p_des[1] + 0.0001*k
-            z_ref = p_des[2] + 0.0001*k
-            x_ref = (p_0[0] - p_des[0])*k/N + p_des[0]
-            y_ref = (p_0[1] - p_des[1])*k/N + p_des[1]
-            z_ref = (p_0[2] - p_des[2])*k/N + p_des[2]
-            '''
+
             x_ref = (p_des[0] - p_0[0])*k/N + p_0[0]
             y_ref = (p_des[1] - p_0[1])*k/N + p_0[1]
             z_ref = (p_des[2] - p_0[2])*k/N + p_0[2]
-            '''
-            # Compute a point of the ellipse in a local frame
-            a = np.sqrt((p_des[0] - p_0[0])**2 + (p_des[1] - p_0[1])**2)/2
-            x_ref0 = a * cos(p)
-            y_ref0 = 0.02* self.b * sin(p)
-            gama =np.arctan((p_des[0] - p_0[0])/(p_des[1] - p_0[1])) 
-            # Rotate and displace the point
-            x_ref = cos(gama) * x_ref0 - sin(gama) * y_ref0 + a*np.cos(gama)
-            y_ref = sin(gama) * x_ref0 + cos(gama) * y_ref0 + a*np.sin(gama)
-            z_ref = self.height
-            '''
 
             # Save the computed point
             path[0].append(x_ref)
@@ -365,14 +347,43 @@ class Paths:
             p = p + dp
 
             # Compute a point of the ellipse in a local frame
-            #x_ref0 = (5 - self.first_y[self.robot_number])*self.a * cos(p)
-            #y_ref0 = (5 - self.first_y[self.robot_number])*self.b * sin(p)
-            x_ref0 = (5)*self.a * cos(p)
-            y_ref0 = (5)*self.b * sin(p)
+            x_ref0 = (5 - self.range_of_action*self.first_y[self.robot_number])*self.a * cos(p)
+            y_ref0 = (5 - self.range_of_action*self.first_y[self.robot_number])*self.b * sin(p)
 
             # Rotate and displace the point
             x_ref = cos(self.phi) * x_ref0 - sin(self.phi) * y_ref0 + posi[0] #+ 3*self.a/2
-            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + posi[1] + (5)*self.b
+            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + posi[1] + (5 - self.range_of_action*self.first_y[self.robot_number])*self.b
+
+            # Save the computed point
+            path[0].append(x_ref)
+            path[1].append(y_ref)
+            path[2].append(self.height_fire)
+
+        return (path)
+
+    # ----------  ----------  ----------  ----------  ----------
+
+
+    # Function to generate the path of action
+    def refference_path_4(self, N, pos_des_now):
+        # Parameter
+        dp = 2*pi/N
+        p = -dp
+
+        # Loop to sample the curve
+        path = [[],[],[]]
+        for k in range(N):
+
+            # Increment parameter
+            p = p + dp
+
+            # Compute a point of the ellipse in a local frame
+            x_ref0 = 0.5 * cos(p)
+            y_ref0 = 0.5 * sin(p)
+
+            # Rotate and displace the point
+            x_ref = cos(self.phi) * x_ref0 - sin(self.phi) * y_ref0 + pos_des_now[0]
+            y_ref = sin(self.phi) * x_ref0 + cos(self.phi) * y_ref0 + pos_des_now[1]
 
             # Save the computed point
             path[0].append(x_ref)
@@ -455,7 +466,7 @@ class Paths:
             del_w = self.area.x/2
             del_h = self.area.y/2
 
-            if rob_num == 0 or rob_num == 2:
+            if rob_num == 0 or rob_num == 1:
                 del_x = 0
                 if rob_num == 0:
                     del_y = 0
@@ -463,30 +474,31 @@ class Paths:
                     del_y = -del_h
             else:
                 del_x = self.area.x/2
-                if rob_num == 1:
+                if rob_num == 3:
                     del_y = -self.area.y/2
                 else:
                     del_y = 0
 
         elif num_rob == 5:
-            if rob_num == 0 or rob_num == 2 or rob_num == 3:
+            if rob_num == 0 or rob_num == 1 or rob_num == 4:
                 del_w = .75*self.area.x 
-                del_x = del_w - self.area.x /2
-            else:
-                del_w = .25*self.area.x 
-                del_x = self.area.x/2
-            
-            if rob_num == 0 or rob_num == 2 or rob_num == 3:
                 del_h = self.area.y/3 
+
+                del_x = del_w - self.area.x /2
+
                 if rob_num == 0:
                     del_y = del_h/2
-                elif rob_num == 3:
+                elif rob_num == 1:
                     del_y = - del_h/2
                 else:
                     del_y = - 3*del_h/2
+
             else:
+                del_w = .25*self.area.x 
                 del_h = self.area.y/2
-                if rob_num == 1:
+                del_x = self.area.x/2
+
+                if rob_num == 2:
                     del_y = 0
                 else:
                     del_y = - self.area.y/2
@@ -696,7 +708,6 @@ class Paths:
 
         self.pub_state.publish(self.etapa)
 
-        # Simulate Process on Rviz
         while not rospy.is_shutdown():
 
             for i in range(len(self.seen_it)):
@@ -762,8 +773,31 @@ class Paths:
 
                 for i in range(self.number_of_robots):
                     self.pos_des_now[i] = deepcopy(self.pos_des[whosawit])
-                    self.pos_des_now[i][0] += self.first_x[i]
-                    self.pos_des_now[i][1] += self.first_y[i]
+                    self.largest_diag = deepcopy(self.largest_diag_seen[whosawit])
+
+                    modifier_x = self.first_x[i]
+                    modifier_y = self.first_y[i]
+
+                    if np.ceil(self.largest_diag/self.range_of_action) == 1:
+                        modifier_x = 0
+                        modifier_y = 0
+
+                    elif np.ceil(self.largest_diag/self.range_of_action) == 2 and self.number_of_robots > 1:
+                        if self.robot_number == 3:
+                            modifier_x -= 4
+                            modifier_y += 1
+                    elif np.ceil(self.largest_diag/self.range_of_action) == 3 and self.number_of_robots > 2:
+                        if self.robot_number == 0 and self.number_of_robots == 3:
+                            modifier_x += 2
+                            modifier_y -= 2
+                    elif np.ceil(self.largest_diag/self.range_of_action) == 4 and self.number_of_robots > 3:
+                        modifier_x += 4
+                        modifier_y -= 2
+
+
+
+                    self.pos_des_now[i][0] += 2*modifier_x
+                    self.pos_des_now[i][1] += 2*modifier_y
 
                 self.path2 = self.refference_path_2(self.number_of_samples,self.pos[self.robot_number], self.pos_des_now[self.robot_number])
                 self.path_msg2 = self.create_path_msg(self.path2,False)
@@ -772,7 +806,7 @@ class Paths:
             elif (self.saw_it and self.etapa == 2 and not self.got_there):
                 x = np.linalg.norm(np.array(self.pos[self.robot_number]) - np.array(self.pos_des_now[self.robot_number]))
 
-                if (x <= 1.0):
+                if (x <= 2.0):
                     self.got_there = 1
                     self.etapa += 1
 
@@ -782,12 +816,26 @@ class Paths:
 
             # Wait for reunion
             elif (self.etapa == 3 and self.got_there and not self.reunited):
+                self.path_special = self.refference_path_4(self.number_of_samples, self.pos_des_now[self.robot_number])
+                self.path_msg_special = self.create_path_msg(self.path_special,True)
+                self.log("Waiting for reunion around {}".format(self.pos_des_now[self.robot_number]), rospy.loginfo)
+
+                for i in range(len(self.uavs_status)):
+                    if self.uavs_status[i]:
+                        self.failures_list.append(i)
+
                 for i in range(self.number_of_robots):
-                    if np.linalg.norm(np.array(self.pos[i]) - np.array(self.pos_des_now[i])) > 2.0:
-                        self.reunited = 0
-                        break
-                    else:
-                        self.reunited = 1  
+                    if i not in self.failures_list and i != self.robot_number:
+                        if np.linalg.norm(np.array(self.pos[i]) - np.array(self.pos_des_now[i])) > 3.0:
+                            self.log("Waiting for UAV {} {}".format(i+1, self.pos_des_now[i]), rospy.loginfo)
+
+                            self.reunited = 0
+                            break
+                        else:
+                            self.reunited = 1  
+                            
+                self.pub_path.publish(self.path_msg_special)
+                self.send_curve_to_rviz(self.path_special, self.pub_rviz_curve)
 
             # Wait 5 seconds Stage
             elif (self.etapa == 3 and self.got_there and self.reunited):
@@ -809,16 +857,18 @@ class Paths:
 
                 self.pub_state.publish(self.etapa)
                 #self.pos2 = [self.pos[self.robot_number][0] - self.first_x[self.robot_number], self.pos[self.robot_number][1] - self.first_y[self.robot_number]]
-                self.pos2 = self.pos[0][:2] #[self.pos[self.robot_number][0], self.pos[self.robot_number][1]]
-                self.path3 = self.refference_path_3(self.number_of_samples, self.pos2)
-                self.path_msg3 = self.create_path_msg(self.path3, True)
-                # print("g")
+
+
 
             elif (self.etapa == 5 and not self.fire_extinguished[self.robot_number]):
 
                 self.pub_state.publish(self.etapa)
                 
                 self.log("Extinguishing fire", rospy.loginfo)
+
+                self.pos2 = self.pos[0][:2] 
+                self.path3 = self.refference_path_3(self.number_of_samples, self.pos2)
+                self.path_msg3 = self.create_path_msg(self.path3, True)
 
                 for i in range(len(self.fire_extinguished)):
                     self.fire_extinguished[i] = True

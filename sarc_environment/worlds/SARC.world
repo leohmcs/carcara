@@ -113,25 +113,25 @@
         </model>
 			<model name='SARcfireTree0'>
           <include>
-            <pose>-77.89092537349728 -17.172222117494897 0 0 0 0</pose>
+            <pose>-76.95509678352893 -15.173598937086842 0 0 0 0</pose>
             <uri>model://SARcfireTree</uri>
           </include>
         </model>
 			<model name='SARccloseTree0'>
           <include>
-            <pose>-114.73196832636181 -34.70739773449105 0 0 0 0</pose>
+            <pose>-68.1802827473454 8.26891831632917 0 0 0 0</pose>
             <uri>model://SARccloseTree</uri>
           </include>
         </model>
 			<model name='SARctree0'>
           <include>
-            <pose>-89.67535126500472 51.84535823667894 0 0 0 0</pose>
+            <pose>-103.25666839437775 -76.66192678352144 0 0 0 0</pose>
             <uri>model://SARctree</uri>
           </include>
         </model>
 			<model name='SARclandArea'>
           <include>
-            <pose>109 120 0.02 0 0 0</pose>
+            <pose>123 125 0.02 0 0 0</pose>
             <uri>model://SARclandArea</uri>
           </include>
         </model>

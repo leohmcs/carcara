@@ -6,9 +6,12 @@ from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import Twist, Point, Quaternion
 from std_msgs.msg import Float32
 from nav_msgs.msg import Odometry
+from sarc_carcara.msg import FireDetectionResult
 
 import numpy as np
 import time
+
+from copy import deepcopy
 
 from distancefield.msg import Path, PathEq
 import quadrobot_class
@@ -36,6 +39,7 @@ class QuadRobotNode(object):
         self.epsilon = None
         self.switch_dist_0 = None
         self.switch_dist = None
+        self.range_of_action = 0.5
         self.closest = [1000,1000,1000]
         self.closest_world = [1000,1000,1000]
         self.trajectory_stage = Float32()
@@ -56,8 +60,10 @@ class QuadRobotNode(object):
         self.pub_acrorate = None
         # self.pub_rviz_ref = None
         # self.pub_rviz_curve = None
+
         self.init_node()
         self.arrange()
+
 
         # distance field controller
         self.quad_robot_obj = quadrobot_class.QuadRobot(self.vr, self.kf, self.reverse_direction, self.flag_follow_obstacle, self.epsilon, self.switch_dist_0, self.switch_dist, self.m, self.kv, self.kw,self.robot_number)
@@ -78,133 +84,188 @@ class QuadRobotNode(object):
         while not rospy.is_shutdown():
             self.quad_robot_obj.set_state(self.state)
 
+            if np.ceil(self.largest_diag/self.range_of_action) == 1:
+                modifier_x = 0
+                modifier_y = 0
+
+            elif np.ceil(self.largest_diag/self.range_of_action) == 2 and self.number_of_robots > 1:
+                if self.robot_number == 3:
+                    modifier_x -= 4
+                    modifier_y += 1
+            elif np.ceil(self.largest_diag/self.range_of_action) == 3 and self.number_of_robots > 2:
+                if self.robot_number == 0 and self.number_of_robots == 3:
+                    modifier_x += 2
+                    modifier_y -= 2
+            elif np.ceil(self.largest_diag/self.range_of_action) == 4 and self.number_of_robots > 3:
+                modifier_x += 4
+                modifier_y -= 2
+
 
             if self.quad_robot_obj.vec_field_obj.is_ready():
-
+                factorr = 1
                 if (self.trajectory_stage.data != 0 and self.trajectory_stage.data != 3 and self.trajectory_stage.data != 7 and self.trajectory_stage.data != 5):
                     factorr = 1
                 elif (self.trajectory_stage.data == 5):
-                    factorr = (5 - self.first_y)/5
-                else:
-                    factorr = 0
 
-                factorr = 1
+
+                    for i in range(len(self.seen_it)):
+                        if self.seen_it[i] == 1.0:
+                            whosawit = i
+
+                    for i in range(self.number_of_robots):
+                        self.largest_diag = deepcopy(self.largest_diag_seen[whosawit])
+
+                        modifier_x = self.first_x[i]
+                        modifier_y = self.first_y[i]
+
+                        if np.ceil(self.largest_diag/self.range_of_action) == 1:
+                            modifier_x = 0
+                            modifier_y = 0
+
+                        elif np.ceil(self.largest_diag/self.range_of_action) == 2 and self.number_of_robots > 1:
+                            if self.robot_number == 3:
+                                modifier_x -= 4
+                                modifier_y += 1
+                        elif np.ceil(self.largest_diag/self.range_of_action) == 3 and self.number_of_robots > 2:
+                            if self.robot_number == 0 and self.number_of_robots == 3:
+                                modifier_x += 2
+                                modifier_y -= 2
+                        elif np.ceil(self.largest_diag/self.range_of_action) == 4 and self.number_of_robots > 3:
+                            modifier_x += 4
+                            modifier_y -= 2
+
+                    factorr = (5 - self.range_of_action*modifier_y)/5
+                else:
+                    factorr = 1
+
+                close_distance = 99999999
+
+                for i in range(self.number_of_robots):
+                    if i != self.robot_number:
+                        x = np.linalg.norm(np.array(self.pos[self.robot_number]) - np.array(self.pos[i]))
+                        if x < close_distance:
+                            close_distance = x
+                            self.closest_world = np.array(self.pos[i])
+                    else:
+                        pass
+
+                if(self.flag_follow_obstacle):
+                    self.quad_robot_obj.vec_field_obj.set_closest(self.closest_world)
 
                 pos = [self.state[0], self.state[1], self.state[2]]
-                Vx, Vy, Vz, flag = self.quad_robot_obj.vec_field_obj.compute_field_at_p(pos)
+                rospy.loginfo(f'Closest: {self.closest_world}')
+                Vx, Vy, Vz, flag = self.quad_robot_obj.vec_field_obj.compute_field_at_p(pos,self.closest_world)
+                
+                V_mod = 1
+                if self.trajectory_stage.data == 5:
+                    V_mod = np.linalg.norm([Vx,Vy,Vz])
+                
                 vel_msg = Twist()
-                vel_msg.linear.x = Vx*factorr 
-                vel_msg.linear.y = Vy*factorr 
-                vel_msg.linear.z = Vz*factorr 
+                
+                if V_mod != 0:
+                    vel_msg.linear.x = Vx*factorr/V_mod
+                    vel_msg.linear.y = Vy*factorr/V_mod
+                    vel_msg.linear.z = Vz*factorr/V_mod
+                else:
+                    vel_msg.linear.x = 0
+                    vel_msg.linear.y = 0
+                    vel_msg.linear.z = 0
+
+
                 self.pub_cmd_vel.publish(vel_msg)
-    
-
-            # if self.quad_robot_obj.vec_field_obj.is_ready():
-            #     pos = [self.state[0], self.state[1], self.state[2]]
-            #     Vx, Vy, Vz, flag = self.quad_robot_obj.vec_field_obj.compute_field_at_p(pos)
-            #     vel_msg = Twist()
-            #     vel_msg.linear.x = Vx
-            #     vel_msg.linear.y = Vy
-            #     vel_msg.linear.z = Vz
-            #     self.pub_cmd_vel.publish(vel_msg)
-
-                # if(self.flag_follow_obstacle):
-                #     self.quad_robot_obj.vec_field_obj.set_closest(self.closest_world)
-
-                # self.quad_robot_obj.control_step_parallel()
-                # self.quad_robot_obj.control_step()
-                # [tau, omega] = self.quad_robot_obj.get_acrorate()
-
-                # acrorate_msg.w = tau
-                # acrorate_msg.x = omega[0]
-                # acrorate_msg.y = omega[1]
-                # acrorate_msg.z = omega[2]
-                # self.pub_acrorate.publish(acrorate_msg)
 
             rate.sleep()
 
     def arrange(self):
         deltinha = 2
+        self.first_x = []
+        self.first_y = []
 
-        if self.number_of_robots < 6:
-            if self.robot_number == 0:
-                self.first_x = 0*deltinha
-                self.first_y = 1*deltinha
+        for nu in range(self.number_of_robots):
+            self.first_x.append(0)
+            self.first_y.append(0)
 
-            elif  0 < self.robot_number < 4:
-                self.first_x = (self.robot_number - 2)*deltinha
-                self.first_y = 0*deltinha
 
-            elif self.robot_number == 4:
-                self.first_x = 0*deltinha
-                self.first_y = -1*deltinha
+        for nu in range(self.number_of_robots):
+            if self.number_of_robots < 6:
+                if nu == 0:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = 1*deltinha
+
+                elif  0 < nu < 4:
+                    self.first_x[nu] = (nu - 2)*deltinha
+                    self.first_y[nu] = 0*deltinha
+
+                elif nu == 4:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = -1*deltinha
+
+                else:
+                    print("Invalid Robot Number")
+                    a = 1/0
+
+            elif 6 <= self.number_of_robots < 14:
+                if nu == 0:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = 2*deltinha
+
+                elif 0 < nu < 4:
+                    self.first_x[nu] = (nu - 2)*deltinha
+                    self.first_y[nu] = 1*deltinha
+
+                elif  3 < nu < 9:
+                    self.first_x[nu] = (nu - 6)*deltinha
+                    self.first_y[nu] = 0*deltinha
+
+                elif 8 < nu < 12:
+                    self.first_x[nu] = (nu - 10)*deltinha
+                    self.first_y[nu] = -1*deltinha
+
+
+                elif nu == 12:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = -2*deltinha
+
+                else:
+                    print("Invalid Robot Number")
+                    a = 1/0
+
+            elif 14 <= self.number_of_robots < 26:
+                if nu == 0:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = 3*deltinha
+
+                elif 0 < nu < 4:
+                    self.first_x[nu] = (nu - 2)*deltinha
+                    self.first_y[nu] = 2*deltinha
+
+                elif 3 < nu < 9:
+                    self.first_x[nu] = (nu - 6)*deltinha
+                    self.first_y[nu] = 1*deltinha
+
+                elif  8 < nu < 16:
+                    self.first_x[nu] = (nu - 12)*deltinha
+                    self.first_y[nu] = 0*deltinha
+
+                elif 15 < nu < 21:
+                    self.first_x[nu] = (nu - 18)*deltinha
+                    self.first_y[nu] = -1*deltinha
+
+                elif 20 < nu < 24:
+                    self.first_x[nu] = (nu - 22)*deltinha
+                    self.first_y[nu] = -2*deltinha
+
+
+                elif nu == 24:
+                    self.first_x[nu] = 0*deltinha
+                    self.first_y[nu] = -3*deltinha
+
+                else:
+                    print("Invalid Robot Number")
+                    a = 1/0
 
             else:
-                print("Invalid Robot Number")
-                a = 1/0
-
-        elif 6 <= self.number_of_robots < 14:
-            if self.robot_number == 0:
-                self.first_x = 0*deltinha
-                self.first_y = 2*deltinha
-
-            elif 0 < self.robot_number < 4:
-                self.first_x = (self.robot_number - 2)*deltinha
-                self.first_y = 1*deltinha
-
-            elif  3 < self.robot_number < 9:
-                self.first_x = (self.robot_number - 6)*deltinha
-                self.first_y = 0*deltinha
-
-            elif 8 < self.robot_number < 12:
-                self.first_x = (self.robot_number - 10)*deltinha
-                self.first_y = -1*deltinha
-
-
-            elif self.robot_number == 12:
-                self.first_x = 0*deltinha
-                self.first_y = -2*deltinha
-
-            else:
-                print("Invalid Robot Number")
-                a = 1/0
-
-        elif 14 <= self.number_of_robots < 26:
-            if self.robot_number == 0:
-                self.first_x = 0*deltinha
-                self.first_y = 3*deltinha
-
-            elif 0 < self.robot_number < 4:
-                self.first_x = (self.robot_number - 2)*deltinha
-                self.first_y = 2*deltinha
-
-            elif 3 < self.robot_number < 9:
-                self.first_x = (self.robot_number - 6)*deltinha
-                self.first_y = 1*deltinha
-
-            elif  8 < self.robot_number < 16:
-                self.first_x = (self.robot_number - 12)*deltinha
-                self.first_y = 0*deltinha
-
-            elif 15 < self.robot_number < 21:
-                self.first_x = (self.robot_number - 18)*deltinha
-                self.first_y = -1*deltinha
-
-            elif 20 < self.robot_number < 24:
-                self.first_x = (self.robot_number - 22)*deltinha
-                self.first_y = -2*deltinha
-
-
-            elif self.robot_number == 24:
-                self.first_x = 0*deltinha
-                self.first_y = -3*deltinha
-
-            else:
-                print("Invalid Robot Number")
-                a = 1/0
-
-        else:
-            print("too many robots, my condolences")
+                print("too many robots, my condolences")
 
 
     def init_node(self):
@@ -232,12 +293,13 @@ class QuadRobotNode(object):
         self.path_topic_name = rospy.get_param("~topics/path_topic_name", "example_path")
         self.path_equation_topic_name = rospy.get_param("~topics/path_equation_topic_name", "example_path_equation")
 
-        self.flag_follow_obstacle = rospy.get_param("~obstacle_avoidance/flag_follow_obstacle", False)
+        self.flag_follow_obstacle = rospy.get_param("~obstacle_avoidance/flag_follow_obstacle", True)
         self.epsilon = rospy.get_param("~obstacle_avoidance/epsilon", 0.5)
         self.switch_dist_0 = rospy.get_param("~obstacle_avoidance/switch_dist_0", 1.5)
         self.switch_dist = rospy.get_param("~obstacle_avoidance/switch_dist", 1.0)
         self.obstacle_point_topic_name = rospy.get_param("~obstacle_avoidance/obstacle_point_topic_name", "/closest_obstacle_point")
 
+        self.largest_diag = 0
 
         # publishers
         self.pub_cmd_vel = rospy.Publisher(self.cmd_vel_topic_name, Twist, queue_size=1)
@@ -245,16 +307,23 @@ class QuadRobotNode(object):
         # self.pub_rviz_ref = rospy.Publisher("/visualization_ref_vel", Marker, queue_size=1)
         # self.pub_rviz_curve = rospy.Publisher("/visualization_path", MarkerArray, queue_size=1)
 
-        # # subscribers
+        # subscribers
         rospy.Subscriber(self.path_topic_name, Path, self.callback_path)
         rospy.Subscriber(self.path_equation_topic_name, PathEq, self.callback_path_equation)
         rospy.Subscriber("trajectory_state",  Float32, self.trajectory_state_cb)
 
-        if(self.flag_follow_obstacle):
-            # rospy.Subscriber(self.obstacle_point_topic_name, Point, self.callback_closest_body)
-            rospy.Subscriber(self.obstacle_point_topic_name, Point, self.callback_closest)
-        # rospy.Subscriber(self.obstacle_point_topic_name, Point, self.obstacle_point_cb)
+        # Subscribers
+        self.pos_subscriber = [[]]*self.number_of_robots
+        self.pos = [[]]*self.number_of_robots
+        self.largest_diag_seen = [0]*self.number_of_robots
+        self.seen_it = [0]*self.number_of_robots
+        self.vis_subscriber = [[]]*self.number_of_robots
 
+        for i in range(self.number_of_robots):
+            self.vis_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/fire_detection_result",  FireDetectionResult, self.vision_cb, (i))
+
+        for i in range(self.number_of_robots):
+            self.pos_subscriber[i] = rospy.Subscriber(f"/uav{i + 1}/odometry/odom_gps",  Odometry, self.obst_cb, (i))
 
         if self.pose_topic_type == "Odometry":
             rospy.Subscriber(self.pose_topic_name, Odometry, self.odometry_cb)
@@ -265,22 +334,14 @@ class QuadRobotNode(object):
     def trajectory_state_cb(self,data):
         self.trajectory_stage = data
 
-    def callback_closest_body(self,data):
-        self.closest = [data.x, data.y, data.z]
+    # Callback of robots positions data
+    def obst_cb(self,data,args):
+        self.pos[args] = [data.pose.pose.position.x, data.pose.pose.position.y, data.pose.pose.position.z]
 
-        # CORRECT THE TRANSFORMATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        # COMPUTE WORLD POINT FROM THE BODY POINT
-        r = np.sqrt(data.x*data.x + data.y*data.y)
-        theta = np.arctan2(data.y,data.x)
-
-        self.closest_world = [self.state[0]+r*np.cos(self.state[2]+theta), self.state[1]+r*np.sin(self.state[2]+theta), 0.0+data.z]
-
-
-    def callback_closest(self,data):
-        self.closest = [data.x, data.y, data.z]
-        self.closest_world = [self.closest[0], self.closest[1], self.closest[2]]
-
+    # Callback of robots sensor data
+    def vision_cb(self,data, args):
+        self.seen_it[args] = data.fire_detected
+        self.largest_diag_seen[args] = data.largest_diag
 
     def callback_path(self, data):
         """Callback to obtain the path to be followed by the robot

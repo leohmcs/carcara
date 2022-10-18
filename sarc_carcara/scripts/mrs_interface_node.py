@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from mrs_msgs.msg import SpeedTrackerCommand, Float64Stamped, UavStatus
+from mrs_msgs.msg import SpeedTrackerCommand, Float64Stamped, UavStatus, PositionCommand
 from geometry_msgs.msg import Twist, Accel
 from std_msgs.msg import Bool
 
@@ -28,6 +28,8 @@ class MrsInterfaceNode:
         status_sub = rospy.Subscriber("mrs_uav_status/uav_status", UavStatus, self.status_cb)
 
         self.command_pub = rospy.Publisher("control_manager/speed_tracker/command", SpeedTrackerCommand, queue_size=10)
+        self.pos_command_pub = rospy.Publisher("control_manager/position_cmd", PositionCommand, queue_size=10)
+
         rospy.wait_for_service("control_manager/switch_tracker", timeout=None)
         self.switch_tracker_srv = rospy.ServiceProxy("control_manager/switch_tracker", String)
         self.land_srv = rospy.ServiceProxy("uav_manager/land", Trigger)
@@ -48,16 +50,15 @@ class MrsInterfaceNode:
         self.command_pub.publish(command_msg)
 
     def vel_cb(self, msg: Twist):
-        vel = msg.linear
+        vel = [msg.linear.x, msg.linear.y, msg.linear.z]
+
         command_msg = SpeedTrackerCommand()
         command_msg.header.stamp = rospy.Time.now()
         command_msg.header.frame_id = "{}/gps_origin".format(self.ns)
-        command_msg.velocity.x = vel.x
-        command_msg.velocity.y = vel.y
-        command_msg.velocity.z = vel.z
-        # command_msg.heading = np.arccos(vel.x/np.linalg.norm([vel.x, vel.y]))
+        command_msg.velocity.x = vel[0]
+        command_msg.velocity.y = vel[1]
+        command_msg.velocity.z = vel[2]
         command_msg.use_velocity = True
-        # command_msg.use_heading = True
         self.command_pub.publish(command_msg)
         self.command_published = True
 

@@ -28,9 +28,9 @@ class FireDetector:
         min_x = np.min(fire_pixels[1])
         max_x = np.max(fire_pixels[1])
 
-        # start = (min_x, max_y)
-        # end = (max_x, min_y)
-        # self.__show_result(img, fire=True, start=start, end=end)
+        start = (min_x, max_y)
+        end = (max_x, min_y)
+        self.__show_result(img, fire=True, start=start, end=end)
 
         # mid_x = int((min_x + max_x)/2)
         # mid_y = int((min_y + max_y)/2)

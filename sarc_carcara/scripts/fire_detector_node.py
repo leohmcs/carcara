@@ -49,7 +49,7 @@ class FireDetectorNode:
             self.log('Waiting for camera info.', rospy.loginfo)
         else:
             img = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-            fire_vertices = self.fire_detector.locate_fire(img)
+            fvert = self.fire_detector.locate_fire(img)     # fire vertices
             
             result_msg = FireDetectionResult()
 
@@ -57,20 +57,28 @@ class FireDetectorNode:
                 rospy.loginfo('[{}] Odom not received.'.format(self.ns))
                 return
                 
-            if fire_vertices is None or self.pos[2] < 1.0:
+            if fvert is None or self.pos[2] < 1.0:
                 result_msg.fire_detected = False
             else:
                 # diag = self.estimate_fire_diagonal(fire_vertices)
 
-                mid_x = int((fire_vertices[0] + fire_vertices[2])/2)
-                mid_y = int((fire_vertices[1] + fire_vertices[3])/2)
-                fire_center = [mid_x, mid_y]
-                rect = self.camera_model.rectifyPoint(fire_center)
-                p_c = self.camera_model.projectPixelTo3dRay(rect) # point for z = 1 in the camera frame
-                fire_pos_world = self.point_in_world(p_c)
-                rospy.loginfo("Fire detected at position ({}, {}, {})!".format(fire_pos_world[0], fire_pos_world[1], fire_pos_world[2]))
+                mid_x = int((fvert[0] + fvert[2])/2)
+                mid_y = int((fvert[1] + fvert[3])/2)
+                # fire_center = [mid_x, mid_y]
+                poi = [[mid_x, mid_y], [fvert[0], fvert[1]], [fvert[0], fvert[3]], [fvert[2], fvert[3]], [fvert[2], fvert[1]]]    # points of interest
+                poi_world = []
+                for p in poi:
+                    rect = self.camera_model.rectifyPoint(p)
+                    p_c = self.camera_model.projectPixelTo3dRay(rect)       # point for z = 1 in the camera frame
+                    pos_world = self.point_in_world(p_c)
+                    poi_world.append(pos_world)
+
+                # rospy.loginfo("Fire detected at position {}!".format(poi_world[o]))
+
+                diags = np.abs([poi_world[0] - poi_world[2], poi_world[1] - poi_world[3]])
                 result_msg.fire_detected = True
-                result_msg.position = self.point_msg(fire_pos_world)
+                result_msg.position = self.point_msg(poi_world[0])
+                result_msg.largest_diag = np.max([diags])
             
             self.fire_pos_pub.publish(result_msg)
     
